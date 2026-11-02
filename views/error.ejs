@@ -1,0 +1,15 @@
+<%# error.ejs - page d'erreur générique. %>
+<%# Reçoit : title, message. %>
+<%# En-tête commun ; on lui transmet le titre de la page. %>
+<%- include("partials/header", {title}) %>
+<%# Bloc d'erreur centré (réutilise le style de la page de confirmation). %>
+<section class="success-wrap">
+  <div class="success-mark">!</div>
+  <span class="eyebrow">Ecrin d'art d'amina</span>
+  <%# Le titre et le message viennent du serveur. %>
+  <h1><%= title %></h1>
+  <p><%= message %></p>
+  <a href="/" class="btn btn-dark">Retour à l'accueil</a>
+</section>
+<%# Pied de page commun. %>
+<%- include("partials/footer") %>

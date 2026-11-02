@@ -1,0 +1,60 @@
+<%# admin/customers.ejs - répertoire des clients. %>
+<%# Reçoit : title, customers[]. %>
+<%# Haut de la mise en page admin ; surligne « Clients » dans le menu. %>
+<%- include("partials-top", {title, active:"customers"}) %>
+<div class="admin-panel">
+  <div class="panel-heading">
+    <div>
+      <span class="eyebrow">RELATIONS CLIENTS</span>
+      <h2>Répertoire des clients</h2>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <%# En-têtes du tableau. %>
+      <thead>
+        <tr>
+          <th>Client</th>
+          <th>Contact</th>
+          <th>Inscrit le</th>
+          <th>Commandes</th>
+          <th>Total payé</th>
+          <th>Compte</th>
+        </tr>
+      </thead>
+      <tbody>
+        <%# Ligne affichée quand il n'y a aucun client. %>
+        <% if(!customers.length){ %>
+          <tr>
+            <td colspan="6" class="muted">Aucun client inscrit pour le moment.</td>
+          </tr>
+        <% } %>
+        <%# Boucle : une ligne par client. %>
+        <% customers.forEach(c=>{ %>
+          <tr>
+            <td>
+              <div class="table-product">
+                <%# Avatar formé de la première lettre du nom. %>
+                <span class="customer-avatar"><%= c.full_name.slice(0,1).toUpperCase() %></span>
+                <strong><%= c.full_name %></strong>
+              </div>
+            </td>
+            <%# E-mail et téléphone (ou « Aucun téléphone renseigné »). %>
+            <td><%= c.email %><br><small><%= c.phone||"Aucun téléphone renseigné" %></small></td>
+            <td><%= new Date(c.created_at).toLocaleDateString("fr-FR") %></td>
+            <%# Nombre de commandes. %>
+            <td><%= c.order_count %></td>
+            <%# Total des commandes payées. %>
+            <td>$<%= Number(c.paid_total).toFixed(2) %></td>
+            <td>
+              <%# Pastille d'état du compte : actif ou désactivé. %>
+              <span class="status-pill <%= c.is_active?'status-active':'status-archived' %>"><%= c.is_active?'actif':'désactivé' %></span>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%# Bas de la mise en page admin. %>
+<%- include("partials-bottom") %>

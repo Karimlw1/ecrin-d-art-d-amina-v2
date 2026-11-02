@@ -1,0 +1,51 @@
+<%# admin/activity.ejs - journal d'activité des clients (pages vues, paniers, recherches...). %>
+<%# Reçoit : title, activity[]. %>
+<%# Haut de la mise en page admin ; surligne « Activité des clients » dans le menu. %>
+<%- include("partials-top", {title, active:"activity"}) %>
+<div class="admin-panel">
+  <div class="panel-heading">
+    <div>
+      <span class="eyebrow">STATISTIQUES DE LA BOUTIQUE</span>
+      <h2>Journal d'activité des clients</h2>
+      <%# Confidentialité : les invités sont suivis par un identifiant de session pseudonymisé ; les adresses IP brutes ne sont pas conservées. %>
+      <p class="muted">Des identifiants de session pseudonymisés sont utilisés pour le suivi des invités ; les adresses IP brutes ne sont pas conservées.</p>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <%# En-têtes du tableau. %>
+      <thead>
+        <tr>
+          <th>Heure</th>
+          <th>Client</th>
+          <th>Événement</th>
+          <th>Produit</th>
+          <th>Référence de session</th>
+        </tr>
+      </thead>
+      <tbody>
+        <%# Ligne affichée quand il n'y a aucune activité. %>
+        <% if(!activity.length){ %>
+          <tr>
+            <td colspan="5" class="muted">Aucune activité enregistrée pour le moment.</td>
+          </tr>
+        <% } %>
+        <%# Boucle : une ligne par événement. %>
+        <% activity.forEach(a=>{ %>
+          <tr>
+            <td><%= new Date(a.created_at).toLocaleString("fr-FR") %></td>
+            <%# Nom du client, ou « Invité » pour un visiteur non connecté. %>
+            <td><%= a.full_name||"Invité" %></td>
+            <%# Type d'événement traduit en français par label(). %>
+            <td><span class="activity-type"><%= label(a.event_type) %></span></td>
+            <td><%= a.product_name||"—" %></td>
+            <%# Seuls les 12 premiers caractères de la clé de session sont affichés. %>
+            <td><code><%= a.session_key ? a.session_key.slice(0,12)+"…" : "—" %></code></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%# Bas de la mise en page admin. %>
+<%- include("partials-bottom") %>

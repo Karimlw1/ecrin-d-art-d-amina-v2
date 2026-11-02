@@ -1,0 +1,30 @@
+<%# order-success.ejs - confirmation affichée juste après la passation d'une commande. %>
+<%# Reçoit : title, orderNumber, paymentMethod. %>
+<%# En-tête commun ; on lui transmet le titre de la page. %>
+<%- include("partials/header", {title}) %>
+<%# Bloc de confirmation centré. %>
+<section class="success-wrap">
+  <%# Grande coche de succès. %>
+  <div class="success-mark">✓</div>
+  <span class="eyebrow">COMMANDE REÇUE</span>
+  <h1>Merci.<br><em>Elle est en route.</em></h1>
+  <%# Affiche le numéro de la nouvelle commande. %>
+  <p>Votre numéro de commande est <strong><%= orderNumber %></strong>.</p>
+  <p>
+    <%# Message selon le mode de paiement : Airtel Money, carte ou paiement à la livraison. %>
+    <% if (paymentMethod === "airtel_money") { %>
+      Le paiement Airtel Money est en attente de confirmation par la boutique. L'équipe vérifiera votre paiement avant de le marquer comme payé.
+    <% } else if (paymentMethod === "card") { %>
+      Votre commande est enregistrée, mais le paiement par carte n'est pas encore connecté. La boutique vous contactera pour organiser le paiement.
+    <% } else { %>
+      Votre commande est enregistrée. Payez en espèces à la livraison.
+    <% } %>
+  </p>
+  <%# Liens pour suivre la commande ou continuer à explorer. %>
+  <div class="success-actions">
+    <a class="btn btn-dark" href="/order/<%= orderNumber %>">Suivre cette commande ↗</a>
+    <a class="underlined-link" href="/shop">Continuer à explorer</a>
+  </div>
+</section>
+<%# Pied de page commun. %>
+<%- include("partials/footer") %>

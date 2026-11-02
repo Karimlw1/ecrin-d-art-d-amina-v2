@@ -1,0 +1,118 @@
+<%# shop.ejs - liste des produits (/shop) avec filtres (catégorie, taille, couleur, prix), recherche et tri. %>
+<%# Reçoit : title, products, categories, sizes, colors, selectedCategory, selectedSize, selectedColor, minPrice, maxPrice, q, sort. %>
+<%# En-tête commun ; on lui transmet le titre de la page. %>
+<%- include("partials/header", {title}) %>
+<%# Bandeau de titre de la page. %>
+<section class="page-hero compact-hero">
+  <img src="/uploads/EAblack.png" alt="" srcset="">
+  <span class="eyebrow">LA COLLECTION</span>
+  <h1>Tous les <em>styles.</em></h1>
+  <p>Trouvez votre taille, choisissez votre couleur, faites-en votre style.</p>
+</section>
+<%# Deux colonnes : filtres à gauche, résultats à droite. %>
+<section class="section shop-layout">
+  <%# Colonne latérale : catégories et formulaire de filtres. %>
+  <aside class="shop-filters">
+    <%# Liens de catégories. %>
+    <h3>Catégories</h3>
+    <%# Lien « Tous les produits » ; surligné quand aucune catégorie n'est choisie. %>
+    <a class="<%= !selectedCategory ? 'active' : '' %>" href="/shop"> Tous les produits </a>
+    <%# Boucle : un lien par catégorie ; la catégorie courante reçoit la classe « active ». %>
+    <% categories.forEach(cat => { %>
+      <a class="<%= selectedCategory === cat.slug ? 'active' : '' %>" href="/shop?category=<%= cat.slug %>" > <%= cat.name %> </a>
+    <% }) %>
+    <hr>
+    <%# Formulaire de filtres en GET : les filtres deviennent des paramètres d'URL (/shop?size=M&color=Noir...). %>
+    <h3>Filtrer les produits</h3>
+    <form action="/shop" method="get" class="filter-form">
+      <%# Champs cachés : renvoient la catégorie, la recherche et le tri actuels pour ne pas les perdre quand on applique un filtre. %>
+      <% if (selectedCategory) { %>
+        <input type="hidden" name="category" value="<%= selectedCategory %>">
+      <% } %>
+      <% if (q) { %>
+        <input type="hidden" name="q" value="<%= q %>">
+      <% } %>
+      <% if (sort) { %>
+        <input type="hidden" name="sort" value="<%= sort %>">
+      <% } %>
+      <%# Liste déroulante des tailles. %>
+      <label for="size">Taille</label>
+      <select name="size" id="size">
+        <option value="">Toutes les tailles</option>
+        <%# Boucle : une option par taille disponible ; « selected » est ajouté pour le choix actuel. %>
+        <% sizes.forEach(item => { %>
+          <option value="<%= item.size %>" <%= selectedSize === item.size ? "selected" : "" %> ><%= item.size %></option>
+        <% }) %>
+      </select>
+      <%# Liste déroulante des couleurs. %>
+      <label for="color">Couleur</label>
+      <select name="color" id="color">
+        <option value="">Toutes les couleurs</option>
+        <%# Boucle : une option par couleur disponible. %>
+        <% colors.forEach(item => { %>
+          <option value="<%= item.color_name %>" <%= selectedColor === item.color_name ? "selected" : "" %> ><%= item.color_name %></option>
+        <% }) %>
+      </select>
+      <%# Prix minimum. %>
+      <label for="min_price">Prix minimum</label>
+      <input type="number" name="min_price" id="min_price" min="0" step="0.01" value="<%= minPrice %>" placeholder="0" >
+      <%# Prix maximum (vide = sans limite). %>
+      <label for="max_price">Prix maximum</label>
+      <input type="number" name="max_price" id="max_price" min="0" step="0.01" value="<%= maxPrice %>" placeholder="Sans limite" >
+      <%# Bouton d'envoi du formulaire de filtres. %>
+      <button type="submit" class="btn btn-dark btn-small"> Appliquer les filtres </button>
+      <a href="/shop" class="btn btn-small"> Effacer les filtres </a>
+    </form>
+  </aside>
+  <%# Colonne de droite : barre de recherche/tri et grille de produits. %>
+  <div class="shop-results">
+    <%# Barre de recherche et de tri (son propre formulaire GET). Les champs cachés conservent les filtres actifs. %>
+    <form class="shop-toolbar" action="/shop" method="get">
+      <% if (selectedCategory) { %>
+        <input type="hidden" name="category" value="<%= selectedCategory %>">
+      <% } %>
+      <%# Conserve la taille, la couleur et les prix choisis lors d'une recherche ou d'un tri. %>
+      <% if (selectedSize) { %>
+        <input type="hidden" name="size" value="<%= selectedSize %>">
+      <% } %>
+      <% if (selectedColor) { %>
+        <input type="hidden" name="color" value="<%= selectedColor %>">
+      <% } %>
+      <% if (minPrice !== "") { %>
+        <input type="hidden" name="min_price" value="<%= minPrice %>">
+      <% } %>
+      <% if (maxPrice !== "") { %>
+        <input type="hidden" name="max_price" value="<%= maxPrice %>">
+      <% } %>
+      <%# Champ de recherche. %>
+      <input type="search" name="q" value="<%= q %>" placeholder="Rechercher dans la collection..." aria-label="Rechercher des produits" >
+      <%# Liste de tri : plus récents, prix croissant/décroissant, nom. %>
+      <select name="sort" aria-label="Trier les produits">
+        <option value="newest" <%= sort === "newest" ? "selected" : "" %>>Plus récents</option>
+        <option value="price_asc" <%= sort === "price_asc" ? "selected" : "" %>>Prix : croissant</option>
+        <option value="price_desc" <%= sort === "price_desc" ? "selected" : "" %>>Prix : décroissant</option>
+        <option value="name" <%= sort === "name" ? "selected" : "" %>>Nom</option>
+      </select>
+      <button type="submit" class="btn btn-dark btn-small"> Appliquer </button>
+    </form>
+    <%# S'il y a des produits : la grille ; sinon : l'état « aucun résultat ». %>
+    <% if (products.length) { %>
+      <div class="product-grid">
+        <%# Boucle : une vignette produit par produit. %>
+        <% products.forEach(product => { %>
+          <%- include("partials/product-card", {product}) %>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <%# Message « aucun résultat » avec un lien pour effacer les filtres. %>
+      <div class="empty-state">
+        <div class="empty-icon">⌕</div>
+        <h3>Aucune pièce trouvée.</h3>
+        <p>Essayez une autre recherche ou catégorie.</p>
+        <a class="btn btn-dark" href="/shop">Effacer les filtres</a>
+      </div>
+    <% } %>
+  </div>
+</section>
+<%# Pied de page commun. %>
+<%- include("partials/footer") %>

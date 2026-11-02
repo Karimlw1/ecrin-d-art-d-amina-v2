@@ -1,0 +1,49 @@
+<%# legal.ejs - pages légales : conditions générales ou politique relative aux cookies. %>
+<%# Reçoit : title, page ('terms' ou autre valeur = cookies). %>
+<%# En-tête commun ; on lui transmet le titre de la page. %>
+<%- include("partials/header", { title }) %>
+<%# Bandeau : le titre et le sous-titre dépendent de la page demandée. %>
+<section class="page-hero compact-hero">
+  <img src="/uploads/EAblack.png" alt="" srcset="">
+  <span class="eyebrow">Ecrin d'art d'amina · INFORMATIONS</span>
+  <%# Titre « Conditions générales » si page vaut 'terms' ; sinon (else) titre de la politique cookies. %>
+  <% if (page === "terms") { %>
+    <h1>Conditions générales<em>.</em></h1>
+    <p>Les règles d'utilisation de notre boutique.</p>
+  <% } else { %>
+    <h1>Politique relative aux cookies<em>.</em></h1>
+    <p>Comment les cookies contribuent au fonctionnement du site.</p>
+  <% } %>
+</section>
+<%# Texte principal de la page. %>
+<section class="section legal-content">
+  <%# Conditions générales (6 articles) ou, dans le else, politique relative aux cookies. %>
+  <% if (page === "terms") { %>
+    <%# Conditions générales, articles 1 à 6. %>
+    <h2>1. Utilisation de la boutique</h2>
+    <p>En utilisant Ecrin d'art d'amina, vous acceptez d'utiliser le site de manière légale et de fournir des informations exactes lors de la création d'un compte ou d'une commande.</p>
+    <h2>2. Produits et prix</h2>
+    <p>Les produits, tailles, couleurs, prix et disponibilités sont affichés sur leurs fiches. Une variante peut être indisponible lorsque le stock est épuisé. Une commande est soumise à confirmation.</p>
+    <h2>3. Commandes et paiements</h2>
+    <p>Les moyens de paiement proposés peuvent inclure Airtel Money, la carte bancaire et le paiement à la livraison selon les options disponibles au moment de la commande. Vérifiez votre panier et vos coordonnées avant de confirmer.</p>
+    <h2>4. Livraison et retours</h2>
+    <p>Les modalités de livraison, les délais et les conditions de retour doivent être confirmés avec Ecrin d'art d'amina avant l'achat. Contactez le service client en cas de problème avec une commande.</p>
+    <h2>5. Compte et sécurité</h2>
+    <p>Vous êtes responsable de la confidentialité de votre mot de passe. Signalez rapidement toute utilisation non autorisée de votre compte.</p>
+    <%# NOTE : ce texte demande d'ajouter les coordonnées officielles et les règles de retour avant la mise en production. %>
+    <h2>6. Contact et mises à jour</h2>
+    <p>Ces conditions peuvent être mises à jour. La version publiée sur cette page est la version applicable. Ajoutez ici les coordonnées officielles et les règles détaillées de retour de votre entreprise avant la mise en production.</p>
+  <% } else { %>
+    <%# Politique cookies, 4 rubriques. %>
+    <h2>Qu'est-ce qu'un cookie ?</h2>
+    <p>Un cookie est un petit fichier enregistré par votre navigateur. Il peut aider un site à conserver une session ou à mémoriser une préférence.</p>
+    <h2>Cookies nécessaires</h2>
+    <p>Ecrin d'art d'amina utilise des mécanismes de session nécessaires à la connexion et au fonctionnement du panier. Sans eux, certaines fonctions peuvent ne pas fonctionner correctement.</p>
+    <h2>Vos choix</h2>
+    <p>Vous pouvez supprimer ou bloquer les cookies depuis les paramètres de votre navigateur. Cela peut vous déconnecter ou réinitialiser certaines fonctions du site.</p>
+    <h2>À propos de cette bannière</h2>
+    <p>La bannière de ce site mémorise votre choix dans le stockage local du navigateur. Cette version ne configure pas de cookies publicitaires ou analytiques. Si vous ajoutez des outils tiers, mettez à jour cette politique et demandez le consentement requis avant leur activation.</p>
+  <% } %>
+</section>
+<%# Pied de page commun. %>
+<%- include("partials/footer") %>

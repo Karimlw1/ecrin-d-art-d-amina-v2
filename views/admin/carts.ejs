@@ -1,0 +1,59 @@
+<%# admin/carts.ejs - paniers actifs et abandonnés. %>
+<%# Reçoit : title, carts[]. %>
+<%# Haut de la mise en page admin ; surligne « Paniers abandonnés » dans le menu. %>
+<%- include("partials-top", {title, active:"carts"}) %>
+<%# Explique ce que montre cette page. %>
+<div class="notice-box">L'activité du panier est liée à une session tant que le client ne s'est pas connecté. Un panier est marqué comme converti après la passation d'une commande. Cette page permet d'identifier les paniers actifs et abandonnés, pas des informations personnelles cachées.</div>
+<div class="admin-panel">
+  <div class="panel-heading">
+    <div>
+      <span class="eyebrow">OPPORTUNITÉS DE RELANCE</span>
+      <h2>Paniers actifs et abandonnés</h2>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <%# En-têtes du tableau. %>
+      <thead>
+        <tr>
+          <th>Visiteur</th>
+          <th>Dernière activité</th>
+          <th>Articles</th>
+          <th>Valeur estimée</th>
+          <th>Contenu du panier</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        <%# Ligne affichée quand il n'y a aucun panier. %>
+        <% if(!carts.length){ %>
+          <tr>
+            <td colspan="6" class="muted">Aucun panier actif pour le moment.</td>
+          </tr>
+        <% } %>
+        <%# Boucle : une ligne par panier. %>
+        <% carts.forEach(c=>{ %>
+          <tr>
+            <td>
+              <%# Nom et e-mail du visiteur, ou « Visiteur invité » pour une session sans compte. %>
+              <strong><%= c.full_name||"Visiteur invité" %></strong>
+              <br>
+              <small><%= c.email||"Session invité" %></small>
+            </td>
+            <td><%= new Date(c.last_activity).toLocaleString("fr-FR") %></td>
+            <%# Nombre d'articles. %>
+            <td><%= c.item_count %></td>
+            <%# Valeur estimée du panier. %>
+            <td>$<%= Number(c.cart_value).toFixed(2) %></td>
+            <%# Résumé en texte des articles du panier. %>
+            <td class="cart-contents"><%= c.items||"Aucun article dans le panier" %></td>
+            <%# Pastille du statut du panier (actif, abandonné, converti). %>
+            <td><span class="status-pill status-<%= c.status %>"><%= label(c.status) %></span></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%# Bas de la mise en page admin. %>
+<%- include("partials-bottom") %>

@@ -1,0 +1,42 @@
+<%# auth/register.ejs - page de création de compte (/register). %>
+<%# Reçoit : title. %>
+<%# En-tête commun (chemin relatif au dossier auth). %>
+<%- include("../partials/header", {title}) %>
+<%# Deux panneaux : illustration à gauche, formulaire à droite. %>
+<section class="auth-wrap">
+  <%# Panneau décoratif. %>
+  <div class="auth-art">
+    <span class="eyebrow">REJOIGNEZ-NOUS</span>
+    <h1>Faites de la place<br>pour <em>vous.</em></h1>
+    <p>Vos favoris, vos commandes, tout au même endroit.</p>
+    <div class="auth-big-a">A.</div>
+  </div>
+  <%# Carte d'inscription. %>
+  <div class="auth-card">
+    <span class="eyebrow">CRÉER UN COMPTE</span>
+    <h2>Rejoindre Ecrin d'art d'amina</h2>
+    <%# Formulaire d'inscription : envoie les informations vers /register. %>
+    <form action="/register" method="post" class="stack-form">
+      <label>Nom complet</label>
+      <%# Nom complet. %>
+      <input name="full_name" required autocomplete="name">
+      <label>Adresse e-mail</label>
+      <%# Adresse e-mail. %>
+      <input type="email" name="email" required autocomplete="email">
+      <label>Numéro de téléphone</label>
+      <%# Téléphone (facultatif). %>
+      <input name="phone" placeholder="+243..." autocomplete="tel">
+      <label>Mot de passe</label>
+      <%# Mot de passe, 8 caractères minimum. %>
+      <input type="password" name="password" minlength="8" required autocomplete="new-password">
+      <label>Confirmer le mot de passe</label>
+      <%# Répéter le mot de passe ; doit être identique (vérifié côté serveur). %>
+      <input type="password" name="confirm_password" minlength="8" required autocomplete="new-password">
+      <button class="btn btn-dark btn-full">Créer un compte ↗</button>
+    </form>
+    <%# Lien vers la page de connexion. %>
+    <p class="auth-switch">Déjà inscrit ? <a href="/login">Se connecter</a></p>
+  </div>
+</section>
+<%# Pied de page commun. %>
+<%- include("../partials/footer") %>

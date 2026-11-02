@@ -1,0 +1,39 @@
+<%# footer.ejs - pied de page commun, inclus en bas de chaque page. %>
+<%# Ferme la balise <main> ouverte dans header.ejs. %>
+<%# Ferme le <main> ouvert dans header.ejs. %>
+</main>
+<%# Pied de page : 3 colonnes de liens et ligne de copyright. %>
+<footer class="site-footer">
+  <div>
+    <%# Colonne 1 : logo clair et slogan. %>
+    <a class="brand brand-light" href="/"> <img src="/uploads/blackBG.jpeg" alt="Logo Ecrin"> </a>
+    <p>Le style au quotidien, choisi avec soin.</p>
+  </div>
+  <div>
+    <%# Colonne 2 : liens de navigation de la boutique. %>
+    <strong>Explorer</strong>
+    <a href="/shop">Toute la boutique</a>
+    <a href="/account">Mes commandes</a>
+    <a href="/cart">Mon panier</a>
+  </div>
+  <div>
+    <%# Colonne 3 : pages légales, région et moyens de paiement acceptés. %>
+    <strong>Informations</strong>
+    <a href="/conditions-generales">Conditions générales</a>
+    <a href="/cookies">Politique relative aux cookies</a>
+    <span>RDC · +243</span>
+    <span>Paiements : Airtel Money, carte, paiement à la livraison</span>
+  </div>
+  <%# Ligne de copyright ; l'année se met à jour automatiquement. %>
+  <div class="copyright">© <%= new Date().getFullYear() %> Ecrin d'art d'amina. Tous droits réservés.</div>
+</footer>
+<%# Bandeau d'information sur les cookies, caché par défaut ; le script du site décide de l'afficher. %>
+<div class="cookie-notice" id="cookie-notice" hidden>
+  <p>Nous utilisons des cookies nécessaires au fonctionnement de la boutique.</p>
+  <a href="/cookies">En savoir plus</a>
+  <%# Bouton d'acceptation (comportement géré dans /js/main.js). %>
+  <button type="button" id="accept-cookies" class="btn btn-dark">Accepter</button>
+</div>
+<%# Fin de la page. %>
+</body>
+</html>

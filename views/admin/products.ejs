@@ -1,0 +1,76 @@
+<%# admin/products.ejs - liste des produits avec niveaux de stock et actions modifier/archiver. %>
+<%# Reçoit : title, products[]. %>
+<%# Haut de la mise en page admin ; surligne « Produits » dans le menu. %>
+<%- include("partials-top", {title, active:"products"}) %>
+<div class="admin-panel">
+  <div class="panel-heading">
+    <div>
+      <span class="eyebrow">GESTION DU CATALOGUE</span>
+      <h2>Produits et inventaire</h2>
+    </div>
+    <%# Ouvre le formulaire de création d'un produit. %>
+    <a href="/admin/products/new" class="btn btn-dark btn-small">+ Ajouter un produit</a>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <%# En-têtes du tableau. %>
+      <thead>
+        <tr>
+          <th>Produit</th>
+          <th>Catégorie</th>
+          <th>Prix de départ</th>
+          <th>Stock</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <%# Ligne affichée quand il n'y a aucun produit. %>
+        <% if (!products.length) { %>
+          <tr>
+            <td colspan="6" class="muted">Aucun produit pour le moment. Ajoutez le premier.</td>
+          </tr>
+        <% } %>
+        <%# Boucle : une ligne par produit. %>
+        <% products.forEach(p => { %>
+          <tr>
+            <td>
+              <%# Miniature du produit (ou cadre de remplacement) et nom. %>
+              <div class="table-product">
+                <% if(p.image_url){ %>
+                  <img src="<%= p.image_url %>" alt="">
+                <% }else{ %>
+                  <div class="mini-placeholder">A.</div>
+                <% } %>
+                <strong><%= p.name %></strong>
+              </div>
+            </td>
+            <%# Nom de la catégorie ou « Sans catégorie ». %>
+            <td><%= p.category_name || "Sans catégorie" %></td>
+            <%# Prix le plus bas parmi les variantes, ou « Définir le prix » s'il n'y en a pas. %>
+            <td><%= p.from_price == null ? "Définir le prix" : "$"+Number(p.from_price).toFixed(2) %></td>
+            <%# Stock total ; classe « stock-low » (alerte) quand il reste moins de 5 unités. %>
+            <td><span class="<%= p.stock_total<5?'stock-low':'' %>"><%= p.stock_total %></span></td>
+            <%# Pastille de statut du produit (actif, brouillon, archivé). %>
+            <td><span class="status-pill status-<%= p.status %>"><%= label(p.status) %></span></td>
+            <td>
+              <%# Lien Modifier et bouton Archiver. %>
+              <div class="action-row">
+                <a class="text-button" href="/admin/products/<%= p.id %>/edit">Modifier</a>
+                <%# Le bouton Archiver est masqué pour un produit déjà archivé. %>
+                <% if(p.status!=="archived"){ %>
+                  <%# Demande une confirmation avant d'archiver. %>
+                  <form action="/admin/products/<%= p.id %>/archive" method="post" onsubmit="return confirm('Archiver ce produit ?')">
+                    <button class="text-button danger-text">Archiver</button>
+                  </form>
+                <% } %>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%# Bas de la mise en page admin. %>
+<%- include("partials-bottom") %>

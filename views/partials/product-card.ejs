@@ -1,0 +1,39 @@
+<%# product-card.ejs - une vignette produit utilisée dans les grilles (accueil et boutique). %>
+<%# Reçoit : product (slug, name, image_url, featured, category_name, from_price, average_rating). %>
+<%# Conteneur de la vignette produit. %>
+<article class="product-card">
+  <%# Zone image ; toute l'image mène à la fiche produit grâce au slug. %>
+  <a class="product-image" href="/product/<%= product.slug %>">
+    <%# Affiche l'image du produit si elle existe, sinon un cadre de remplacement. %>
+    <% if (product.image_url) { %>
+      <img src="<%= product.image_url %>" alt="<%= product.name %>" loading="lazy">
+    <% } else { %>
+      <div class="image-placeholder"><span>Ecrin d'art d'amina</span></div>
+    <% } %>
+    <%# Étiquette « En vedette » uniquement pour les produits mis en avant. %>
+    <% if (product.featured) { %>
+      <span class="product-tag">En vedette</span>
+    <% } %>
+  </a>
+  <%# Partie texte de la vignette. %>
+  <div class="product-card-info">
+    <%# Petit libellé de catégorie, « Nouveauté » si le produit n'a pas de catégorie. %>
+    <span class="eyebrow"><%= product.category_name || "Nouveauté" %></span>
+    <%# Nom du produit, lié à sa fiche. %>
+    <a href="/product/<%= product.slug %>" class="product-name"><%= product.name %></a>
+    <%# Ligne prix et note. %>
+    <div class="product-meta">
+      <%# Prix le plus bas parmi les variantes (2 décimales) précédé de « dès » ; « Prix indisponible » s'il n'y a aucune variante. %>
+      <span class="price">
+        <% if (product.from_price != null) { %>
+          <small>dès</small>
+        <% } %>
+        <%= product.from_price == null ? "Prix indisponible" : "$" + Number(product.from_price).toFixed(2) %>
+      </span>
+      <%# Note moyenne affichée seulement si le produit a des avis. %>
+      <% if (product.average_rating) { %>
+        <span class="rating">★ <%= product.average_rating %></span>
+      <% } %>
+    </div>
+  </div>
+</article>

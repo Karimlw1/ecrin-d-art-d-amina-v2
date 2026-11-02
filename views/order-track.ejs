@@ -1,0 +1,83 @@
+<%# order-track.ejs - suivi d'une commande (/order/:orderNumber). %>
+<%# Reçoit : title, order, items[], history[] (historique des statuts). %>
+<%# En-tête commun ; on lui transmet le titre de la page. %>
+<%- include("partials/header", {title}) %>
+<%# Bandeau avec le numéro de commande et la date de passation. %>
+<section class="page-hero compact-hero">
+  <span class="eyebrow">COMMANDE <%= order.order_number %></span>
+  <h1>Suivez votre <em>commande.</em></h1>
+  <p>Passée le <%= new Date(order.created_at).toLocaleString("fr-FR") %></p>
+</section>
+<%# Disposition : suivi à gauche, détails de livraison à droite. %>
+<section class="section tracking-layout">
+  <div class="tracking-main">
+    <%# Statut actuel et étapes de progression. %>
+    <div class="tracking-status">
+      <span class="eyebrow">STATUT DE LA COMMANDE</span>
+      <strong class="status-pill status-<%= order.order_status %>"><%= label(order.order_status) %></strong>
+      <%# Une étape : une coche si elle est atteinte, sinon son numéro. %>
+      <div class="tracking-steps">
+        <%# Boucle sur les 5 étapes de livraison ; « current » est la position du statut de la commande, et toutes les étapes jusqu'à celle-ci sont marquées comme faites. %>
+        <% ["pending","confirmed","processing","shipped","delivered"].forEach((step,index) => {
+          const states=["pending","confirmed","processing","shipped","delivered"];
+          const current=states.indexOf(order.order_status);
+          %>
+          <div class="tracking-step <%= current>=index ? 'done' : '' %>">
+            <span><%= current>=index ? "✓" : index+1 %></span>
+            <small><%= label(step) %></small>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+    <div class="form-panel">
+      <%# Liste des articles de la commande. %>
+      <h2>Articles</h2>
+      <% items.forEach(item => { %>
+        <div class="checkout-item">
+          <div>
+            <strong><%= item.product_name %></strong>
+            <small><%= item.size %> · <%= item.color_name %> × <%= item.quantity %></small>
+          </div>
+          <strong>$<%= Number(item.line_total).toFixed(2) %></strong>
+        </div>
+      <% }) %>
+    </div>
+    <div class="form-panel">
+      <%# Historique des changements de statut, s'il existe. %>
+      <h2>Mises à jour</h2>
+      <%# Affiche l'historique ou un message s'il est vide. %>
+      <% if (history.length) { history.forEach(event => { %>
+          <%# Un changement : nouveau statut, note et heure. %>
+          <div class="history-row">
+            <span class="history-dot"></span>
+            <div>
+              <strong><%= label(event.new_status) %></strong>
+              <p><%= event.note || "Statut de la commande mis à jour." %></p>
+              <small><%= new Date(event.created_at).toLocaleString("fr-FR") %></small>
+            </div>
+          </div>
+      <% }) } else { %>
+        <p class="muted">Les mises à jour de votre commande apparaîtront ici.</p>
+      <% } %>
+    </div>
+  </div>
+  <aside class="summary-card">
+    <%# Client, adresse, mode de paiement et total. %>
+    <h3>Détails de livraison</h3>
+    <p><strong><%= order.customer_name %></strong><br><%= order.customer_phone %><br><%= order.shipping_address %><br><%= order.shipping_city %>, <%= order.shipping_country %></p>
+    <div class="summary-line">
+      <span>Paiement</span>
+      <strong><%= label(order.payment_method) %></strong>
+    </div>
+    <div class="summary-line">
+      <span>Statut du paiement</span>
+      <strong><%= label(order.payment_status) %></strong>
+    </div>
+    <div class="summary-line summary-total">
+      <span>Total</span>
+      <strong>$<%= Number(order.total).toFixed(2) %></strong>
+    </div>
+  </aside>
+</section>
+<%# Pied de page commun. %>
+<%- include("partials/footer") %>

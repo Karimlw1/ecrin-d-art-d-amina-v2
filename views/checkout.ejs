@@ -1,0 +1,142 @@
+<%# checkout.ejs - page de commande (/checkout) : livraison, mode de paiement et récapitulatif. %>
+<%# Reçoit : title, items[], subtotal, user (facultatif, sert à pré-remplir le formulaire). %>
+<%# En-tête commun ; on lui transmet le titre de la page. %>
+<%- include("partials/header", {title}) %>
+<%# Bandeau de titre de la page. %>
+<section class="page-hero compact-hero">
+  <img src="/uploads/EAblack.png" alt="" srcset="">
+  <span class="eyebrow">PRESQUE À VOUS</span>
+  <h1>Paiement <em>sécurisé.</em></h1>
+  <p>Vérifiez vos informations avant de passer commande.</p>
+</section>
+<%# Disposition : formulaire de commande à gauche, récapitulatif à droite. %>
+<section class="section checkout-layout">
+  <%# Formulaire de commande : envoie les informations de livraison et le mode de paiement vers /checkout. %>
+  <form action="/checkout" method="post" class="checkout-form">
+    <div class="form-panel">
+      <%# Étape 1 : contact et livraison. %>
+      <h2>01 <span>Contact et livraison</span></h2>
+      <div class="form-grid">
+        <div class="field full-field">
+          <label>Nom complet *</label>
+          <%# Nom complet ; pré-rempli si l'utilisateur est connecté. %>
+          <input name="customer_name" value="<%= user ? user.full_name : '' %>" required>
+        </div>
+        <div class="field">
+          <label>E-mail</label>
+          <%# E-mail (facultatif) ; pré-rempli si connecté. %>
+          <input type="email" name="customer_email" value="<%= user ? user.email : '' %>">
+        </div>
+        <div class="field">
+          <label>Numéro de téléphone *</label>
+          <%# Téléphone (obligatoire) pour joindre le client à la livraison. %>
+          <input name="customer_phone" placeholder="+243..." required>
+        </div>
+        <div class="field">
+          <label>Pays</label>
+          <%# Pays de livraison. %>
+          <select name="shipping_country">
+            <option>RD Congo</option>
+            <option>Ouganda</option>
+            <option>Rwanda</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Ville *</label>
+          <%# Ville de livraison (obligatoire). %>
+          <input name="shipping_city" placeholder="Goma, Kinshasa..." required>
+        </div>
+        <div class="field full-field">
+          <label>Adresse de livraison (rue) *</label>
+          <%# Adresse de livraison (obligatoire). %>
+          <input name="shipping_address" required>
+        </div>
+        <div class="field full-field">
+          <label>Note de commande (facultatif)</label>
+          <%# Note facultative : point de repère, heure souhaitée... %>
+          <textarea name="customer_note" rows="3" placeholder="Point de repère, heure de livraison souhaitée..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="form-panel">
+      <%# Étape 2 : mode de paiement (boutons radio, un choix obligatoire). %>
+      <h2>02 <span>Mode de paiement</span></h2>
+      <div class="payment-options">
+        <label class="payment-option">
+          <%# Option : Airtel Money (paiement mobile). %>
+          <input type="radio" name="payment_method" value="airtel_money" required>
+          <span class="payment-icon">A</span>
+          <span>
+            <strong>Airtel Money</strong>
+            <small>RD Congo · numéro +243</small>
+          </span>
+        </label>
+        <label class="payment-option">
+          <%# Option : carte bancaire (pas encore reliée à un prestataire de paiement). %>
+          <input type="radio" name="payment_method" value="card" required>
+          <span class="payment-icon">▤</span>
+          <span>
+            <strong>Carte bancaire</strong>
+            <small>Intégration du paiement par carte requise avant d'accepter de vrais paiements</small>
+          </span>
+        </label>
+        <label class="payment-option">
+          <%# Option : paiement en espèces à la livraison. %>
+          <input type="radio" name="payment_method" value="cash_on_delivery" required>
+          <span class="payment-icon">₣</span>
+          <span>
+            <strong>Paiement à la livraison</strong>
+            <small>Payez à la réception de votre commande</small>
+          </span>
+        </label>
+      </div>
+      <%# Champ du numéro Airtel, caché par défaut ; le script de la page doit l'afficher quand Airtel Money est choisi. Format : +243 suivi de 9 chiffres. %>
+      <div class="field airtel-phone hidden">
+        <label>Numéro Airtel Money (RDC) *</label>
+        <input name="payer_phone" placeholder="+2439XXXXXXXX" pattern="\+243[0-9]{9}">
+        <small>Utilisez +243 suivi de 9 chiffres. Le paiement reste en attente de confirmation jusqu'à sa vérification.</small>
+      </div>
+    </div>
+    <%# Bouton « Passer la commande ». %>
+    <button class="btn btn-dark btn-full checkout-submit">Passer la commande <span>↗</span></button>
+    <%# Avertissement : aucun paiement réel n'est prélevé dans cette version de démarrage. %>
+    <p class="muted small">Les transactions par carte et Airtel Money ne sont pas débitées automatiquement dans cette version de démarrage. La boutique doit connecter un prestataire de paiement vérifié avant d'accepter des paiements en ligne réels.</p>
+  </form>
+  <%# Récapitulatif avec chaque article et les totaux. %>
+  <aside class="summary-card checkout-summary">
+    <h3>Votre commande</h3>
+    <%# Boucle : une ligne par article (miniature, nom, variante, quantité, total de ligne). %>
+    <% items.forEach(item => { %>
+      <div class="checkout-item">
+        <div class="checkout-thumb">
+          <% if (item.image_url) { %>
+            <img src="<%= item.image_url %>" alt="">
+          <% } else { %>
+            A.
+          <% } %>
+        </div>
+        <div>
+          <strong><%= item.name %></strong>
+          <small><%= item.size %> · <%= item.color_name %> × <%= item.quantity %></small>
+        </div>
+        <strong>$<%= (item.price*item.quantity).toFixed(2) %></strong>
+      </div>
+    <% }) %>
+    <div class="summary-line">
+      <%# Sous-total, note de livraison et total. %>
+      <span>Sous-total</span>
+      <strong>$<%= subtotal.toFixed(2) %></strong>
+    </div>
+    <div class="summary-line">
+      <span>Livraison</span>
+      <span>Confirmée par la boutique</span>
+    </div>
+    <div class="summary-line summary-total">
+      <span>Total</span>
+      <strong>$<%= subtotal.toFixed(2) %></strong>
+    </div>
+  </aside>
+</section>
+<%# Pied de page commun. %>
+<%- include("partials/footer") %>

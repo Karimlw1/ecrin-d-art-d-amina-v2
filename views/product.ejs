@@ -1,0 +1,117 @@
+<%# product.ejs - fiche produit (/product/:slug) : choix de la variante, ajout au panier et avis. %>
+<%# Reçoit : title, product (avec variants[]), reviews[], user. %>
+<%# En-tête commun ; on lui transmet le titre de la page. %>
+<%- include("partials/header", {title}) %>
+<%# Partie haute : image à gauche, informations et ajout au panier à droite. %>
+<section class="section product-detail">
+  <%# Image principale du produit, ou grand cadre de remplacement s'il n'y en a pas. %>
+  <div class="detail-image">
+    <% if (product.image_url) { %>
+      <img src="<%= product.image_url %>" alt="<%= product.name %>">
+    <% } else { %>
+      <div class="image-placeholder image-placeholder-large"><span>Ecrin d'art d'amina</span></div>
+    <% } %>
+  </div>
+  <%# Colonne d'informations du produit. %>
+  <div class="detail-copy">
+    <span class="eyebrow"><%= product.category_name || "COLLECTION ECRIN D'ART D'AMINA" %></span>
+    <h1><%= product.name %></h1>
+    <%# Note moyenne et nombre d'avis, ou « Nouveauté » si le produit n'est pas encore noté. %>
+    <div class="detail-rating">
+      <% if (product.average_rating) { %>
+        ★ <%= product.average_rating %> · <%= product.review_count %> avis
+      <% } else { %>
+        Nouveauté
+      <% } %>
+    </div>
+    <%# Description, avec un texte par défaut si elle est vide. %>
+    <p class="detail-description"><%= product.description || "Une pièce soignée pour votre garde-robe au quotidien. Choisissez votre taille et votre couleur pour voir le prix exact." %></p>
+    <%# Formulaire d'ajout au panier : envoie la variante choisie (variant_id) et la quantité. %>
+    <form action="/cart/add" method="post" class="variant-form">
+      <label for="variant_id">Taille et couleur</label>
+      <%# Liste des variantes. Chaque produit a des variantes (taille + couleur) avec prix et stock propres. %>
+      <select id="variant_id" name="variant_id" required>
+        <option value="">Choisissez votre taille et votre teinte</option>
+        <%# Boucle : une option par variante. data-price et data-color sont lus par le script de la page ; les variantes épuisées sont désactivées et marquées « Épuisé ». %>
+        <% product.variants.forEach(v => { %>
+          <option value="<%= v.id %>" data-price="<%= Number(v.price).toFixed(2) %>" data-color="<%= v.color_hex %>" <%= v.stock_quantity < 1 ? "disabled" : "" %>><%= v.size %> · <%= v.color_name %> · $<%= Number(v.price).toFixed(2) %><%= v.stock_quantity < 1 ? " (Épuisé)" : "" %></option>
+        <% }) %>
+      </select>
+      <%# Aperçu en direct (pastille de couleur, libellé, prix), rempli par le script grâce à ces identifiants. %>
+      <div class="variant-preview">
+        <span class="color-dot" id="chosen-color"></span>
+        <span id="chosen-variant">Sélectionnez une taille et une couleur</span>
+        <strong id="chosen-price"></strong>
+      </div>
+      <%# Quantité, entre 1 et 20. %>
+      <label for="quantity">Quantité</label>
+      <input id="quantity" type="number" name="quantity" value="1" min="1" max="20">
+      <%# Bouton d'ajout ; désactivé si aucune variante n'est en stock. %>
+      <button class="btn btn-dark btn-full" <%= !product.variants.some(v => v.stock_quantity > 0) ? "disabled" : "" %>>Ajouter au panier <span>↗</span></button>
+    </form>
+    <%# Petits arguments de réassurance. %>
+    <div class="product-points">
+      <span>✓ Paiement sécurisé</span>
+      <span>✓ Options de livraison locales</span>
+      <span>✓ Prix selon la taille et la couleur</span>
+    </div>
+  </div>
+</section>
+<%# Section des avis. %>
+<section class="section reviews-section">
+  <div class="section-heading">
+    <div>
+      <span class="eyebrow">AVIS DES CLIENTS</span>
+      <h2>Notes et avis<span class="accent-dot">.</span></h2>
+    </div>
+  </div>
+  <%# Deux colonnes : liste des avis et formulaire d'avis. %>
+  <div class="review-layout">
+    <div class="review-list">
+      <%# S'il y a des avis publiés : on les parcourt ; sinon : message « aucun avis ». %>
+      <% if (reviews.length) { reviews.forEach(review => { %>
+          <%# Un avis : auteur, étoiles, commentaire et date. %>
+          <article class="review-card">
+            <div class="review-top">
+              <strong><%= review.full_name %></strong>
+              <%# Étoiles : une pleine par point de note, le reste (jusqu'à 5) en étoiles vides. %>
+              <span class="rating"><%= "★".repeat(review.rating) %><%= "☆".repeat(5-review.rating) %></span>
+            </div>
+            <p><%= review.comment || "A noté ce produit." %></p>
+            <small><%= new Date(review.created_at).toLocaleDateString("fr-FR") %></small>
+          </article>
+      <% }) } else { %>
+        <p class="muted">Aucun avis publié pour le moment. Soyez le premier à partager votre opinion.</p>
+      <% } %>
+    </div>
+    <%# Carte du formulaire d'avis. %>
+    <div class="review-form-card">
+      <h3>Laisser un avis</h3>
+      <%# Seuls les utilisateurs connectés peuvent laisser un avis. %>
+      <% if (user) { %>
+        <%# Envoie l'avis vers /product/:id/review. %>
+        <form action="/product/<%= product.id %>/review" method="post" class="stack-form">
+          <label>Note</label>
+          <%# Note de 5 (excellent) à 1 (mauvais). %>
+          <select name="rating" required>
+            <option value="5">★★★★★ · Excellent</option>
+            <option value="4">★★★★ · Bon</option>
+            <option value="3">★★★ · Correct</option>
+            <option value="2">★★ · Moyen</option>
+            <option value="1">★ · Mauvais</option>
+          </select>
+          <label>Commentaire</label>
+          <%# Commentaire libre (facultatif). %>
+          <textarea name="comment" rows="4" placeholder="La taille vous allait-elle ? Qu'en avez-vous pensé ?"></textarea>
+          <button class="btn btn-dark">Envoyer l'avis</button>
+        </form>
+      <% } else { %>
+        <%# Les visiteurs sont invités à se connecter d'abord. %>
+        <p>Connectez-vous pour noter ce produit.</p>
+        <a class="btn btn-dark" href="/login">Se connecter</a>
+      <% } %>
+    </div>
+  </div>
+</section>
+<%# Pied de page commun. %>
+<%- include("partials/footer") %>

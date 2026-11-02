@@ -1,0 +1,120 @@
+<%# admin/dashboard.ejs - tableau de bord (/admin) : indicateurs, commandes récentes, activité récente. %>
+<%# Reçoit : title, stats, recentOrders[], recentActivity[]. %>
+<%# Haut de la mise en page admin ; « active » surligne cette page dans le menu. %>
+<%- include("partials-top", {title, active:"dashboard"}) %>
+<%# Rangée de cartes d'indicateurs. %>
+<div class="stats-grid">
+  <div class="stat-card">
+    <span>Clients</span>
+    <%# Comptes clients inscrits. %>
+    <strong><%= stats.customers %></strong>
+    <small>Comptes inscrits</small>
+  </div>
+  <div class="stat-card">
+    <span>Produits</span>
+    <%# Articles du catalogue (hors archivés). %>
+    <strong><%= stats.products %></strong>
+    <small>Articles du catalogue</small>
+  </div>
+  <div class="stat-card">
+    <span>Toutes les commandes</span>
+    <%# Toutes les commandes ; le petit texte indique combien sont à traiter. %>
+    <strong><%= stats.orders %></strong>
+    <small><%= stats.open_orders %> à traiter</small>
+  </div>
+  <div class="stat-card">
+    <span>Chiffre d'affaires encaissé</span>
+    <%# Chiffre d'affaires des commandes payées, avec séparateurs de milliers et 2 décimales. %>
+    <strong>$<%= Number(stats.revenue).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2}) %></strong>
+    <small>Commandes payées confirmées</small>
+  </div>
+  <div class="stat-card">
+    <span>Paniers actifs</span>
+    <%# Paniers actifs sur les 30 derniers jours. %>
+    <strong><%= stats.active_carts %></strong>
+    <small>30 derniers jours</small>
+  </div>
+</div>
+<div class="admin-panel">
+  <div class="panel-heading">
+    <div>
+      <span class="eyebrow">DERNIÈRE ACTIVITÉ</span>
+      <%# Panneau : commandes les plus récentes. %>
+      <h2>Commandes récentes</h2>
+    </div>
+    <a class="underlined-link" href="/admin/orders">Tout voir ↗</a>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <%# En-têtes du tableau. %>
+      <thead>
+        <tr>
+          <th>Commande</th>
+          <th>Client</th>
+          <th>Date</th>
+          <th>Total</th>
+          <th>Paiement</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        <%# Ligne affichée quand il n'y a aucune commande. %>
+        <% if (!recentOrders.length) { %>
+          <tr>
+            <td colspan="6" class="muted">Aucune commande pour le moment.</td>
+          </tr>
+        <% } %>
+        <%# Boucle : une ligne par commande récente. %>
+        <% recentOrders.forEach(o => { %>
+          <tr>
+            <td><strong><%= o.order_number %></strong></td>
+            <td><%= o.customer_name %><br><small><%= o.customer_phone %></small></td>
+            <td><%= new Date(o.created_at).toLocaleDateString("fr-FR") %></td>
+            <td>$<%= Number(o.total).toFixed(2) %></td>
+            <td><%= label(o.payment_status) %></td>
+            <%# Pastille de statut ; la classe CSS vient de la valeur, le texte est traduit par label(). %>
+            <td><span class="status-pill status-<%= o.order_status %>"><%= label(o.order_status) %></span></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="admin-panel">
+  <div class="panel-heading">
+    <div>
+      <span class="eyebrow">SIGNAUX EN DIRECT DE LA BOUTIQUE</span>
+      <%# Panneau : flux en direct de l'activité des visiteurs. %>
+      <h2>Activité des clients</h2>
+    </div>
+    <a class="underlined-link" href="/admin/activity">Ouvrir le suivi ↗</a>
+  </div>
+  <div class="activity-list">
+    <%# Message affiché s'il n'y a pas encore d'activité. %>
+    <% if (!recentActivity.length) { %>
+      <p class="muted">L'activité apparaît lorsque les visiteurs parcourent la boutique.</p>
+    <% } %>
+    <%# Boucle : une ligne par événement. %>
+    <% recentActivity.forEach(a => { %>
+      <div class="activity-row">
+        <%# Icône choisie selon le type d'événement ; « · » si le type est inconnu. %>
+        <span class="activity-symbol"><%= ({
+          page_view:"◉",
+          product_view:"◇",
+          add_to_cart:"+",
+          remove_from_cart:"−",
+          checkout_started:"▤",
+          order_placed:"✓",
+          search:"⌕"
+        })[a.event_type] || "·" %></span>
+        <div>
+          <strong><%= a.full_name || "Visiteur invité" %></strong>
+          <p><%= label(a.event_type) %><%= a.product_name ? " · "+a.product_name : "" %></p>
+        </div>
+        <small><%= new Date(a.created_at).toLocaleString("fr-FR") %></small>
+      </div>
+    <% }) %>
+  </div>
+</div>
+<%# Bas de la mise en page admin. %>
+<%- include("partials-bottom") %>

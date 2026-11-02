@@ -1,0 +1,107 @@
+<%# admin/product-form.ejs - formulaire de création ou modification d'un produit et de ses variantes taille/couleur. %>
+<%# Reçoit : title, product (null en création), categories[], variants[]. %>
+<%# Haut de la mise en page admin ; surligne « Produits » dans le menu. %>
+<%- include("partials-top", {title, active:"products"}) %>
+<%# Un seul formulaire pour créer et modifier : envoie vers /admin/products/:id si `product` existe, sinon vers /admin/products. multipart est nécessaire pour l'image. %>
+<form action="<%= product ? '/admin/products/'+product.id : '/admin/products' %>" method="post" enctype="multipart/form-data" class="admin-form" id="product-editor">
+  <div class="admin-panel">
+    <div class="panel-heading">
+      <div>
+        <%# Panneau 1 : informations de base du produit. %>
+        <span class="eyebrow">DÉTAILS DU PRODUIT</span>
+        <h2>À propos de cette pièce</h2>
+      </div>
+      <a href="/admin/products" class="underlined-link">Annuler</a>
+    </div>
+    <div class="form-grid">
+      <div class="field full-field">
+        <label>Nom du produit *</label>
+        <%# Nom du produit (obligatoire). %>
+        <input name="name" value="<%= product ? product.name : '' %>" required>
+      </div>
+      <div class="field">
+        <label>Catégorie</label>
+        <%# Liste des catégories ; la catégorie actuelle est présélectionnée en modification. %>
+        <select name="category_id">
+          <option value="">Choisir une catégorie</option>
+          <%# Boucle : une option par catégorie. %>
+          <% categories.forEach(c => { %>
+            <option value="<%= c.id %>" <%= product && product.category_id===c.id?'selected':'' %>><%= c.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="field">
+        <label>Visibilité</label>
+        <%# Visibilité : actif, brouillon ou archivé. %>
+        <select name="status">
+          <%# Boucle sur les statuts autorisés ; en modification on garde le statut actuel, en création « actif » par défaut. %>
+          <% ["active","draft","archived"].forEach(s => { %>
+            <option value="<%= s %>" <%= product && product.status===s?'selected':(!product&&s==='active'?'selected':'') %>><%= label(s) %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="field full-field">
+        <label>Description</label>
+        <%# Description du produit. %>
+        <textarea name="description" rows="4"><%= product ? product.description || '' : '' %></textarea>
+      </div>
+      <div class="field full-field">
+        <label>Image du produit (JPG, PNG, WEBP, GIF, 5 Mo maximum)</label>
+        <%# Téléversement d'image (JPG, PNG, WEBP, GIF ; 5 Mo maximum indiqué dans le libellé). %>
+        <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif">
+        <% if(product && product.image_url){ %>
+          <%# Affiche l'image actuelle en modification. %>
+          <img class="admin-image-preview" src="<%= product.image_url %>" alt="Image actuelle du produit">
+        <% } %>
+      </div>
+      <div class="field checkbox-field">
+        <%# Case à cocher : mettre ce produit en avant sur la page d'accueil. %>
+        <label><input type="checkbox" name="featured" value="1" <%= product && product.featured?'checked':'' %>> Mettre en avant sur la page d'accueil</label>
+      </div>
+    </div>
+  </div>
+  <div class="admin-panel">
+    <div class="panel-heading">
+      <div>
+        <%# Panneau 2 : variantes taille/couleur, chacune avec son prix et son stock. %>
+        <span class="eyebrow">PRIX ET GESTION DU STOCK</span>
+        <h2>Variantes de taille et de couleur</h2>
+        <p class="muted">Définissez un prix et une quantité en stock distincts pour chaque combinaison.</p>
+      </div>
+      <%# Bouton géré par le script : ajoute une nouvelle ligne de variante vide. %>
+      <button class="btn btn-outline btn-small" type="button" id="add-variant">+ Ajouter une variante</button>
+    </div>
+    <%# En-têtes de colonnes des lignes de variantes. %>
+    <div class="variant-editor-head">
+      <span>Taille</span>
+      <span>Nom de la couleur</span>
+      <span>Code couleur</span>
+      <span>Prix (USD)</span>
+      <span>Stock</span>
+      <span>SKU</span>
+      <span></span>
+    </div>
+    <%# Conteneur rempli par le script avec une ligne par variante. %>
+    <div id="variant-rows"></div>
+    <%# Champ caché : le script y écrit toutes les variantes en JSON pour les envoyer avec le formulaire. %>
+    <input type="hidden" name="variants_json" id="variants-json">
+    <%# Explication pour l'administrateur. %>
+    <p class="muted small">Exemple : taille M + noir = 25 $ ; taille XL + noir = 29 $ ; taille M + blanc = 26 $. Le client voit le prix de la combinaison exacte qu'il sélectionne.</p>
+  </div>
+  <%# Bouton d'enregistrement. %>
+  <div class="form-actions"><button class="btn btn-dark">Enregistrer le produit ↗</button></div>
+</form>
+<%# Transmet les variantes existantes au script de la page. NOTE : cette balise affiche le JSON sans échappement ; une valeur (par ex. un SKU) contenant une balise de fermeture de script pourrait casser la page. Échappez le signe « inférieur à » si ces champs sont modifiables par des utilisateurs. %>
+<script>
+  window.initialVariants = <%- JSON.stringify(variants.map(v => ({
+  id:v.id,
+  size:v.size,
+  color_name:v.color_name,
+  color_hex:v.color_hex,
+  price:v.price,
+  stock_quantity:v.stock_quantity,
+  sku:v.sku||''
+  }))) %>;
+</script>
+<%# Bas de la mise en page admin. %>
+<%- include("partials-bottom") %>

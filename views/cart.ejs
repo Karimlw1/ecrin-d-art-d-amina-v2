@@ -1,0 +1,81 @@
+<%# cart.ejs - page du panier (/cart). %>
+<%# Reçoit : title, items[], subtotal. %>
+<%# En-tête commun ; on lui transmet le titre de la page. %>
+<%- include("partials/header", {title}) %>
+<%# Bandeau de titre de la page. %>
+<section class="page-hero compact-hero">
+  <img src="/uploads/EAblack.png" alt="" srcset="">
+  <span class="eyebrow">VOTRE SÉLECTION</span>
+  <h1>Mon <em>panier.</em></h1>
+  <p>De bons choix. Faisons-en les vôtres.</p>
+</section>
+<%# Disposition : liste des articles à gauche, récapitulatif à droite. %>
+<section class="section cart-layout">
+  <%# Panier vide : message d'invitation ; sinon (else) : liste des articles et récapitulatif. %>
+  <% if (!items.length) { %>
+    <div class="empty-state cart-empty">
+      <div class="empty-icon">♡</div>
+      <h3>Votre Panier est vide.</h3>
+      <p>Trouvez ce que vous aimez, cela vous attendra ici.</p>
+      <a class="btn btn-dark" href="/shop">Découvrir la boutique ↗</a>
+    </div>
+  <% } else { %>
+    <%# Liste des articles du panier. %>
+    <div class="cart-items">
+      <%# Boucle : un bloc par article du panier. %>
+      <% items.forEach(item => { %>
+        <article class="cart-item">
+          <%# Miniature liée au produit, avec cadre de remplacement s'il n'y a pas d'image. %>
+          <a href="/product/<%= item.slug %>" class="cart-thumb">
+            <% if (item.image_url) { %>
+              <img src="<%= item.image_url %>" alt="">
+            <% } else { %>
+              <div class="image-placeholder">A.</div>
+            <% } %>
+          </a>
+          <%# Nom, détails de la variante, prix unitaire et quantité. %>
+          <div class="cart-item-info">
+            <a class="product-name" href="/product/<%= item.slug %>"><%= item.name %></a>
+            <%# Variante : taille, pastille de couleur (couleur issue de color_hex) et nom de la couleur. %>
+            <span class="muted"><%= item.size %> · <span class="color-dot tiny" style="background: <%= item.color_hex %>"></span> <%= item.color_name %></span>
+            <strong>$<%= Number(item.price).toFixed(2) %></strong>
+            <%# Formulaire de mise à jour de la quantité ; 0 retire l'article. %>
+            <form action="/cart/update" method="post" class="quantity-form">
+              <input type="hidden" name="cart_item_id" value="<%= item.cart_item_id %>">
+              <input type="number" name="quantity" min="0" max="20" value="<%= item.quantity %>" aria-label="Quantité">
+              <button class="text-button">Mettre à jour</button>
+              <span class="muted">Mettez 0 pour retirer</span>
+            </form>
+          </div>
+          <%# Total de la ligne = prix unitaire × quantité. %>
+          <strong class="line-total">$<%= (item.price*item.quantity).toFixed(2) %></strong>
+        </article>
+      <% }) %>
+    </div>
+    <%# Carte récapitulative de la commande. %>
+    <aside class="summary-card">
+      <h3>Récapitulatif de la commande</h3>
+      <div class="summary-line">
+        <%# Sous-total de tous les articles. %>
+        <span>Sous-total</span>
+        <strong>$<%= subtotal.toFixed(2) %></strong>
+      </div>
+      <div class="summary-line">
+        <%# Les frais de livraison ne sont pas calculés ici ; la boutique les confirme ensuite. %>
+        <span>Livraison</span>
+        <span>Calculée ultérieurement</span>
+      </div>
+      <%# Total estimé (identique au sous-total pour l'instant). %>
+      <div class="summary-line summary-total">
+        <span>Total estimé</span>
+        <strong>$<%= subtotal.toFixed(2) %></strong>
+      </div>
+      <p class="muted small">Les frais de livraison, le cas échéant, seront confirmés par la boutique.</p>
+      <%# Passe à la commande. %>
+      <a href="/checkout" class="btn btn-dark btn-full">Passer à la commande ↗</a>
+      <a href="/shop" class="continue-link">Continuer mes achats</a>
+    </aside>
+  <% } %>
+</section>
+<%# Pied de page commun. %>
+<%- include("partials/footer") %>

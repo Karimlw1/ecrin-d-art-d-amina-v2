@@ -1,0 +1,130 @@
+<%# home.ejs - page d'accueil de la boutique (/). %>
+<%# Reçoit : title, categories, products (produits mis en avant, tirés au hasard). %>
+<%# En-tête commun ; on lui transmet le titre de la page. %>
+<%- include("partials/header", {title}) %>
+<%# Zone d'accueil : carrousel à gauche, vignettes de catégories à droite. %>
+<section class="hero-grid">
+  <!-- Carrousel de produits -->
+  <%# Carrousel : une diapositive par produit mis en avant. %>
+  <section class="hero-carousel">
+    <%# S'il y a des produits : afficher le carrousel ; sinon (else plus bas) : afficher un message de bienvenue. %>
+    <% if (products.length) { %>
+      <%# Boucle : une diapositive par produit ; la première est « active ». %>
+      <% products.forEach(function(product, index) { %>
+        <%# Diapositive : l'image du produit sert de fond. %>
+        <div class="hero-slide <%= index === 0 ? 'active' : '' %>" style="background-image: url('<%= product.image_url %>');">
+          <%# Texte superposé à l'image. %>
+          <div class="hero-copy">
+            <span class="eyebrow"> LA MEILLEURE BOUTIQUE EN LIGNE DE KINSHASA </span>
+            <p>Découvrez votre prochaine pièce préférée dans notre collection.</p>
+          </div>
+        </div>
+      <% }); %>
+      <%# Flèches et points de navigation, seulement s'il y a plus d'un produit. %>
+      <% if (products.length > 1) { %>
+        <%# Flèche « précédent » (le défilement est géré par /js/main.js). %>
+        <button class="carousel-arrow prev" type="button" aria-label="Produit précédent"> &#10094; </button>
+        <button class="carousel-arrow next" type="button" aria-label="Produit suivant"> &#10095; </button>
+        <%# Points indicateurs : un par diapositive. %>
+        <div class="carousel-dots">
+          <% products.forEach(function(product, index) { %>
+            <button class="carousel-dot <%= index === 0 ? 'active' : '' %>" type="button" aria-label="Afficher le produit <%= index + 1 %>"> </button>
+          <% }); %>
+        </div>
+      <% } %>
+    <% } else { %>
+      <div class="hero-copy">
+        <span class="eyebrow">BIENVENUE CHEZ ECRIN</span>
+        <h1>Trouvez votre<br><em>style au quotidien.</em></h1>
+        <p>Découvrez une mode choisie avec soin.</p>
+        <a class="btn btn-dark" href="/shop"> Découvrir la collection → </a>
+      </div>
+    <% } %>
+  </section>
+  <!-- Image de livraison -->
+  <%# Bannière de livraison (image définie dans le CSS). %>
+  <div class="livraisonIMG" id="livraison"></div>
+  <!-- Vignettes de catégories -->
+  <%# Colonne des vignettes de catégories. %>
+  <div class="hero-side">
+    <%# Données des vignettes (écrites ici) : nom, identifiant de catégorie dans l'URL, couleur et symbole. %>
+    <% const tiles = [
+      {name: "Femme", slug: "femme", tone: "peach", symbol: "F"},
+      {name: "Homme", slug: "homme", tone: "mint", symbol: "H"},
+      {name: "Enfant", slug: "enfant", tone: "lilac", symbol: "E"},
+      {name: "Accessoires", slug: "accessoires", tone: "blue", symbol: "+"}
+    ]; %>
+    <%# Boucle : une vignette par catégorie ; chacune mène à la boutique filtrée. %>
+    <% tiles.forEach(tile => { %>
+      <a class="category-tile <%= tile.tone %>" href="/shop?category=<%= tile.slug %>">
+        <span class="tile-symbol"> <%= tile.symbol %> </span>
+        <div>
+          <h3><%= tile.name %></h3>
+          <span>Découvrir</span>
+        </div>
+      </a>
+    <% }); %>
+  </div>
+</section>
+<%# Bloc de connexion affiché seulement aux visiteurs non connectés. %>
+<%if (!user) {%>
+  <%# Invitation à se connecter ou à créer un compte. %>
+  <section class="auth-section" id="auth-section">
+    <div class="section-heading">
+      <div>
+        <img src="uploads/whiteBG.jpeg" alt="Logo Ecrin">
+        <span class="eyebrow"></span>
+        <h2>Votre Style Vous attend<span class="accent-dot">.</span></h2>
+      </div>
+    </div>
+    <%# Boutons de connexion et de création de compte. %>
+    <div class="empty-state">
+      <div class="empty-icon">✳</div>
+      <h3>Connectez-vous.</h3>
+      <a class="btn btn-dark" href="/login">Se connecter↗</a>
+      <h3>Nouveau client ?</h3>
+      <a class="btn btn-light" href="/register">Créer un compte↗</a>
+    </div>
+    <%# Texte cliquable pour continuer sans compte (masquage géré par /js/main.js). %>
+    <h2 id="hideAuthSection">Continuer sans Compte !!!<span class="accent-dot">.</span></h2>
+  </section>
+<% } %>
+<%# Section « Nouveautés ». %>
+<section class="section product-section">
+  <%# Titre de section avec lien « voir tout ». %>
+  <div class="section-heading">
+    <div>
+      <span class="eyebrow">SÉLECTIONNÉ POUR VOUS</span>
+      <h2>Nouveautés<span class="accent-dot">.</span></h2>
+    </div>
+    <a class="underlined-link" href="/shop">Voir tous les produits</a>
+  </div>
+  <%# S'il y a des produits : la grille ; sinon : le message de catalogue vide. %>
+  <% if (products.length) { %>
+    <div class="product-grid">
+      <%# Boucle : une vignette produit par produit. %>
+      <% products.forEach(product => { %>
+        <%- include("partials/product-card", {product}) %>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <%# Message affiché quand le catalogue est vide. %>
+    <div class="empty-state">
+      <div class="empty-icon">✳</div>
+      <h3>Votre prochain coup de cœur commence ici.</h3>
+      <p>Les produits apparaîtront lorsque l'administrateur les ajoutera depuis le tableau de bord.</p>
+    </div>
+  <% } %>
+</section>
+<%# Bannière promotionnelle en bas de page. %>
+<section class="editorial-banner">
+  <div>
+    <span class="eyebrow">LA SÉLECTION ECRIN D'ART D'AMINA</span>
+    <h2>Portez ce qui<br>vous inspire.</h2>
+    <p>Couleur, texture, assurance. Faites-en votre style.</p>
+    <a class="btn btn-light" href="/shop">Découvrir la sélection</a>
+  </div>
+  <div class="editorial-orbit"><span>LE STYLE EST PERSONNEL</span></div>
+</section>
+<%# Pied de page commun. %>
+<%- include("partials/footer") %>

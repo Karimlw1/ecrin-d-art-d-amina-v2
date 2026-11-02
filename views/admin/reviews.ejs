@@ -1,0 +1,59 @@
+<%# admin/reviews.ejs - modération des avis clients. %>
+<%# Reçoit : title, reviews[]. %>
+<%# Haut de la mise en page admin ; surligne « Avis » dans le menu. %>
+<%- include("partials-top", {title, active:"reviews"}) %>
+<div class="admin-panel">
+  <div class="panel-heading">
+    <div>
+      <span class="eyebrow">AVIS DE LA COMMUNAUTÉ</span>
+      <h2>Notes et commentaires</h2>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <%# En-têtes du tableau. %>
+      <thead>
+        <tr>
+          <th>Produit</th>
+          <th>Client</th>
+          <th>Note</th>
+          <th>Commentaire</th>
+          <th>Modération</th>
+        </tr>
+      </thead>
+      <tbody>
+        <%# Ligne affichée quand il n'y a aucun avis. %>
+        <% if(!reviews.length){ %>
+          <tr>
+            <td colspan="5" class="muted">Aucun avis pour le moment.</td>
+          </tr>
+        <% } %>
+        <%# Boucle : une ligne par avis. %>
+        <% reviews.forEach(r=>{ %>
+          <tr>
+            <td><strong><%= r.product_name %></strong></td>
+            <td><%= r.full_name %><br><small><%= new Date(r.created_at).toLocaleDateString("fr-FR") %></small></td>
+            <%# Étoiles : pleines selon la note, vides pour le reste jusqu'à 5. %>
+            <td class="rating"><%= "★".repeat(r.rating) %><%= "☆".repeat(5-r.rating) %></td>
+            <%# Texte de l'avis, ou « Aucun commentaire ». %>
+            <td class="review-comment"><%= r.comment||"Aucun commentaire" %></td>
+            <td>
+              <%# Formulaire de modération : envoie le nouveau statut vers /admin/reviews/:id/status. %>
+              <form action="/admin/reviews/<%= r.id %>/status" method="post" class="inline-admin-form">
+                <select name="status">
+                  <%# Boucle sur les statuts autorisés (en attente, publié, masqué) ; le statut actuel est présélectionné. %>
+                  <% ["pending","published","hidden"].forEach(s=>{ %>
+                    <option value="<%= s %>" <%= r.status===s?'selected':'' %>><%= label(s) %></option>
+                  <% }) %>
+                </select>
+                <button class="btn btn-dark btn-small">Enregistrer</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%# Bas de la mise en page admin. %>
+<%- include("partials-bottom") %>

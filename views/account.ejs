@@ -1,0 +1,62 @@
+<%# account.ejs - espace client (/account) : liste des commandes de l'utilisateur. %>
+<%# Reçoit : title, user, orders[]. %>
+<%# En-tête commun ; on lui transmet le titre de la page. %>
+<%- include("partials/header", {title}) %>
+<%# Salutation avec le prénom de l'utilisateur. %>
+<section class="page-hero compact-hero">
+  <img src="/uploads/EAblack.png" alt="" srcset="">
+  <span class="eyebrow">VOTRE ESPACE ECRIN D'ART D'AMINA</span>
+  <h1>Bienvenue, <em><%= user.full_name.split(" ")[0] %>.</em></h1>
+  <p>Toutes vos commandes, réunies au même endroit.</p>
+</section>
+<%# Section historique des commandes. %>
+<section class="section">
+  <div class="section-heading">
+    <div>
+      <span class="eyebrow">HISTORIQUE DES COMMANDES</span>
+      <h2>Vos commandes<span class="accent-dot">.</span></h2>
+    </div>
+  </div>
+  <%# Tableau des commandes s'il y en a ; sinon une invitation à acheter. %>
+  <% if (orders.length) { %>
+    <div class="table-wrap">
+      <table>
+        <%# En-têtes des colonnes du tableau. %>
+        <thead>
+          <tr>
+            <th>Commande</th>
+            <th>Date</th>
+            <th>Total</th>
+            <th>Paiement</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <%# Boucle : une ligne par commande. %>
+          <% orders.forEach(order => { %>
+            <tr>
+              <td><strong><%= order.order_number %></strong></td>
+              <td><%= new Date(order.created_at).toLocaleDateString("fr-FR") %></td>
+              <td>$<%= Number(order.total).toFixed(2) %></td>
+              <td><%= label(order.payment_status) %></td>
+              <%# Pastille de statut ; la classe CSS est construite à partir de la valeur du statut, le texte est traduit par label(). %>
+              <td><span class="status-pill status-<%= order.order_status %>"><%= label(order.order_status) %></span></td>
+              <%# Lien vers la page de suivi de cette commande. %>
+              <td><a class="underlined-link" href="/order/<%= order.order_number %>">Suivre ↗</a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <%# Affiché quand l'utilisateur n'a pas encore de commande. %>
+    <div class="empty-state">
+      <div class="empty-icon">✳</div>
+      <h3>Votre histoire commence par une première commande.</h3>
+      <a class="btn btn-dark" href="/shop">Découvrir la boutique</a>
+    </div>
+  <% } %>
+</section>
+<%# Pied de page commun. %>
+<%- include("partials/footer") %>

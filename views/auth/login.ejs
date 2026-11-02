@@ -1,0 +1,35 @@
+<%# auth/login.ejs - page de connexion (/login). %>
+<%# Reçoit : title. %>
+<%# En-tête commun (chemin relatif au dossier auth). %>
+<%- include("../partials/header", {title}) %>
+<%# Deux panneaux : illustration à gauche, formulaire à droite. %>
+<section class="auth-wrap">
+  <%# Panneau décoratif d'accueil. %>
+  <div class="auth-art">
+    <h1><span class="eyebrow">BON RETOUR</span> Votre style<br> vous attend.</h1>
+    <p>Content de vous revoir.</p>
+    <div class="auth-big-a">A.</div>
+  </div>
+  <%# Carte de connexion. %>
+  <div class="auth-card">
+    <span class="eyebrow">VOTRE COMPTE</span>
+    <h2>Connexion</h2>
+    <p class="muted">Saisissez vos informations pour continuer.</p>
+    <%# Formulaire de connexion : envoie e-mail et mot de passe vers /login. %>
+    <form action="/login" method="post" class="stack-form">
+      <label>Adresse e-mail</label>
+      <%# Adresse e-mail ; autocomplete aide les gestionnaires de mots de passe. %>
+      <input type="email" name="email" required autocomplete="email">
+      <label>Mot de passe</label>
+      <%# Mot de passe. %>
+      <input type="password" name="password" required autocomplete="current-password">
+      <button class="btn btn-dark btn-full">Se connecter ↗</button>
+    </form>
+    <%# Lien « mot de passe oublié ». %>
+    <a href="/forgot-password"> Mot de passe oublié ? </a>
+    <%# Lien vers la création de compte. %>
+    <p class="auth-switch">Nouveau chez Ecrin d'art d'amina ? <a href="/register">Créer un compte</a></p>
+  </div>
+</section>
+<%# Pied de page commun. %>
+<%- include("../partials/footer") %>

@@ -1,0 +1,32 @@
+<%# admin/partials-top.ejs - mise en page admin, partie haute : en-tête, menu latéral et barre de titre. %>
+<%# Ouvre des balises que admin/partials-bottom.ejs referme. Reçoit : title, active (entrée du menu à surligner), user. %>
+<%# Réutilise l'en-tête de la boutique. %>
+<%- include("../partials/header", {title}) %>
+<%# Conteneur de l'administration (refermé dans partials-bottom.ejs). %>
+<div class="admin-shell">
+  <%# Menu latéral de navigation. %>
+  <aside class="admin-sidebar">
+    <div class="admin-label">GESTION DE LA BOUTIQUE</div>
+    <%# Chaque lien reçoit la classe « active » quand il correspond à la valeur `active` transmise par la page. %>
+    <a href="/admin" class="<%= active==='dashboard'?'active':'' %>">▦ <span>Vue d'ensemble</span></a>
+    <a href="/admin/products" class="<%= active==='products'?'active':'' %>">◇ <span>Produits et stock</span></a>
+    <a href="/admin/orders" class="<%= active==='orders'?'active':'' %>">↗ <span>Commandes</span></a>
+    <a href="/admin/payments" class="<%= active==='payments'?'active':'' %>">＄ <span>Paiements</span></a>
+    <a href="/admin/customers" class="<%= active==='customers'?'active':'' %>">♙ <span>Clients</span></a>
+    <a href="/admin/carts" class="<%= active==='carts'?'active':'' %>">♡ <span>Paniers abandonnés</span></a>
+    <a href="/admin/reviews" class="<%= active==='reviews'?'active':'' %>">☆ <span>Avis</span></a>
+    <a href="/admin/activity" class="<%= active==='activity'?'active':'' %>">⌁ <span>Activité des clients</span></a>
+    <%# Lien de retour vers la boutique publique. %>
+    <a href="/" class="back-store">← <span>Retour à la boutique</span></a>
+  </aside>
+  <%# Zone de contenu principale (refermée dans partials-bottom.ejs). %>
+  <section class="admin-content">
+    <%# Barre du haut : titre de la page et administrateur connecté. %>
+    <div class="admin-topbar">
+      <div>
+        <span class="eyebrow">ESPACE D'ADMINISTRATION ECRIN D'ART D'AMINA</span>
+        <h1><%= title %></h1>
+      </div>
+      <%# Avatar (initiale du nom) et nom complet de l'administrateur. %>
+      <span class="admin-user"><span class="admin-avatar"><%= user.full_name.slice(0,1).toUpperCase() %></span><%= user.full_name %></span>
+    </div>

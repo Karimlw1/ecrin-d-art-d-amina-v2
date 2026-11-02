@@ -1,0 +1,99 @@
+<%# header.ejs - en-tête commun, inclus en haut de chaque page. %>
+<%# Reçoit : title, user (absent pour un visiteur), cartCount, success[], error[]. %>
+<%# Le premier bloc de code ci-dessous donne une valeur par défaut aux variables, pour éviter une erreur si une page ne les fournit pas. %>
+<%
+  users = typeof users !== "undefined" ? users : null;
+  admin = typeof admin !== "undefined" ? admin : null;
+  cartCount = typeof cartCount !== "undefined" ? cartCount : 0;
+  success = typeof success !== "undefined" ? success : [];
+  error = typeof error !== "undefined" ? error : [];
+  title = typeof title !== "undefined" ? title : "Accueil";
+  %>
+<%# Déclaration du type de document HTML5. %>
+<!DOCTYPE html>
+<%# Langue et thème viennent des préférences de l'utilisateur connecté ; par défaut : français et thème clair. %>
+<html lang="<%= user && user.language ? user.language : 'fr' %>" data-theme="<%= user && user.theme ? user.theme : 'light' %>">
+  <%# Tête du document : métadonnées, polices, feuille de style et script. %>
+  <head>
+    <%# Encodage des caractères (accents et symboles). %>
+    <meta charset="UTF-8">
+    <%# Adapte l'affichage aux téléphones. %>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <%# Couleur de la barre du navigateur sur mobile. %>
+    <meta name="theme-color" content="#17221f">
+    <%# Titre de l'onglet : « titre | ecrin » si un titre est fourni, sinon « ecrin ». %>
+    <title><%= title ? title + " | ecrin" : "ecrin" %></title>
+    <%# Ouvre à l'avance la connexion à Google Fonts pour charger plus vite. %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <%# Chargement des polices DM Sans et Playfair Display. %>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <%# Feuille de style principale du site. %>
+    <link rel="stylesheet" href="/css/style.css">
+    <%# Script principal du site, chargé après l'analyse du HTML (defer). %>
+    <script defer src="/js/main.js">
+    </script>
+  </head>
+  <%# Début de la partie visible de la page. %>
+  <body>
+    <%# En-tête du site : logo, bouton de menu, navigation, liens du compte et panier. %>
+    <header class="site-header">
+      <%# Lien du logo. NOTE : le « <span>.</span></a> » après le </a> est un reste de l'ancien logo (point et balise </a> en trop). On peut le supprimer. %>
+      <a class="brand" href="/">Ecrin D'art D'amina </a>
+      <span>.</span>
+      </a>
+      <%# Bouton « hamburger » qui ouvre/ferme le menu sur petit écran. %>
+      <button class="menu-toggle" aria-label="Ouvrir la navigation" aria-expanded="false">☰</button>
+      <%# Navigation principale : accueil, boutique, catégories, puis liens selon le type d'utilisateur. %>
+      <nav class="main-nav">
+        <a href="/">Accueil</a>
+        <a href="/shop">Boutique</a>
+        <a href="/shop?category=femme">Femme</a>
+        <a href="/shop?category=homme">Homme</a>
+        <a href="/shop?category=enfants">Enfants</a>
+        <%# Liens réservés aux clients connectés : compte, commandes, paramètres. %>
+        <% if (user && user.role === "customer") { %>
+          <a href="/account">Mon compte</a>
+          <a href="/account">Mes commandes</a>
+          <a href="/settings">Paramètres</a>
+        <% } %>
+        <%# Lien « Admin » réservé aux administrateurs. %>
+        <% if (user && user.role === "admin") { %>
+          <a href="/admin">Admin</a>
+        <% } %>
+        <%# Utilisateur connecté : déconnexion (formulaire POST caché, déclenché par le lien) ; sinon : connexion et création de compte. %>
+        <% if (user) { %>
+          <form id="logout-form" action="/logout" method="POST" style="display:none;"></form>
+          <a href="/logout" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"> Déconnexion </a>
+        <% } else { %>
+          <a href="/login">Connexion</a>
+          <a href="/register">Créer un compte</a>
+        <% } %>
+      </nav>
+      <%# Partie droite de l'en-tête : liens du compte et panier. %>
+      <div class="header-actions">
+        <% if (user) { %>
+          <a href="/settings" class="small-link">Paramètres</a>
+          <%# Le lien Admin n'apparaît que pour le rôle « admin ». %>
+          <% if (user.role === "admin") { %>
+            <a href="/admin" class="small-link">Admin</a>
+          <% } %>
+          <%# La déconnexion se fait par un formulaire POST (et non un simple lien) pour éviter qu'une simple visite d'URL la déclenche. %>
+          <form action="/logout" method="post" class="inline-form"><button class="text-button">Déconnexion</button></form>
+        <% } else { %>
+          <a href="/login" class="small-link">Connexion</a>
+          <a href="/register" class="small-link">Créer un compte</a>
+        <% } %>
+        <%# Lien du panier ; le nombre dans le span est le nombre d'articles. %>
+        <a class="bag-link" href="/cart">Panier <span><%= cartCount %></span></a>
+      </div>
+    </header>
+    <%# Message flash vert : affiche le premier message de succès stocké en session. %>
+    <% if (success && success.length) { %>
+      <div class="flash flash-success"><%= success[0] %></div>
+    <% } %>
+    <%# Message flash rouge : affiche le premier message d'erreur stocké en session. %>
+    <% if (error && error.length) { %>
+      <div class="flash flash-error"><%= error[0] %></div>
+    <% } %>
+    <%# Ouvre <main> ; il est refermé au début de footer.ejs. %>
+    <main>

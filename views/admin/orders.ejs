@@ -1,0 +1,68 @@
+<%# admin/orders.ejs - liste des commandes avec formulaire de changement de statut. %>
+<%# Reçoit : title, orders[]. %>
+<%# Haut de la mise en page admin ; surligne « Commandes » dans le menu. %>
+<%- include("partials-top", {title, active:"orders"}) %>
+<div class="admin-panel">
+  <div class="panel-heading">
+    <div>
+      <span class="eyebrow">SUIVI DU TRAITEMENT</span>
+      <h2>Toutes les commandes</h2>
+    </div>
+    <span class="muted"><%= orders.length %> dernières commandes</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <%# En-têtes du tableau. %>
+      <thead>
+        <tr>
+          <th>Commande / client</th>
+          <th>Passée le</th>
+          <th>Total des articles</th>
+          <th>Paiement</th>
+          <th>Mettre à jour le statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        <%# Ligne affichée quand il n'y a aucune commande. %>
+        <% if(!orders.length){ %>
+          <tr>
+            <td colspan="5" class="muted">Aucune commande pour le moment.</td>
+          </tr>
+        <% } %>
+        <%# Boucle : une ligne par commande. %>
+        <% orders.forEach(o=>{ %>
+          <tr>
+            <%# Lien vers la page de suivi côté client. %>
+            <td><strong><%= o.order_number %></strong><br><%= o.customer_name %><br><small><%= o.customer_phone %></small><br><a href="/order/<%= o.order_number %>" class="underlined-link">Voir la commande ↗</a></td>
+            <%# Date de passation et ville/pays de livraison. %>
+            <td><%= new Date(o.created_at).toLocaleString("fr-FR") %><br><small><%= o.shipping_city %>, <%= o.shipping_country %></small></td>
+            <%# Total de la commande. %>
+            <td><strong>$<%= Number(o.total).toFixed(2) %></strong></td>
+            <td>
+              <%# Pastille du statut de paiement et mode de paiement (traduits par label()). %>
+              <span class="status-pill status-<%= o.payment_status %>"><%= label(o.payment_status) %></span>
+              <br>
+              <small><%= label(o.payment_method) %></small>
+            </td>
+            <td>
+              <%# Formulaire de statut : envoie le nouveau statut et une note facultative vers /admin/orders/:id/status. %>
+              <form action="/admin/orders/<%= o.id %>/status" method="post" class="inline-admin-form">
+                <select name="order_status">
+                  <%# Boucle sur les statuts autorisés ; le statut actuel est présélectionné. %>
+                  <% ["pending","confirmed","processing","shipped","delivered","cancelled"].forEach(s=>{ %>
+                    <option value="<%= s %>" <%= o.order_status===s?'selected':'' %>><%= label(s) %></option>
+                  <% }) %>
+                </select>
+                <%# Note facultative enregistrée dans l'historique de la commande. %>
+                <input name="note" placeholder="Note (facultatif)">
+                <button class="btn btn-dark btn-small">Enregistrer</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%# Bas de la mise en page admin. %>
+<%- include("partials-bottom") %>

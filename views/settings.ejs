@@ -1,0 +1,85 @@
+<%# settings.ejs - paramètres du compte (/settings) : profil, apparence et mot de passe. %>
+<%# Reçoit : title, account (profil enregistré de l'utilisateur). %>
+<%# En-tête commun ; on lui transmet le titre de la page. %>
+<%- include("partials/header", { title }) %>
+<%# Bandeau de titre de la page. %>
+<section class="page-hero compact-hero">
+  <%# Photo actuelle, ou avatar par défaut ; onerror la masque si elle ne se charge pas. %>
+  <img src="/uploads/EAblack.png" alt="" srcset="">
+  <span class="eyebrow">VOTRE ESPACE</span>
+  <h1>Paramètres<em>.</em></h1>
+  <p>Personnalisez votre expérience Ecrin d'art d'amina.</p>
+</section>
+<%# Deux cartes : profil/apparence et sécurité. %>
+<section class="section settings-layout">
+  <%# Formulaire de profil. enctype=multipart/form-data est nécessaire pour téléverser une photo. %>
+  <form action="/settings/profile" method="post" enctype="multipart/form-data" class="settings-card">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">PRÉFÉRENCES</span>
+        <h2>Profil et apparence</h2>
+      </div>
+    </div>
+    <%# Ligne de la photo de profil. %>
+    <div class="profile-picture-row">
+      <img class="profile-picture" src="<%= account.profile_image || '/images/default-avatar.png' %>" alt="Photo de profil" onerror="this.style.display='none'" >
+      <%# Téléversement de la photo, limité aux images. La limite de 5 Mo est indiquée ici et vérifiée côté serveur. %>
+      <label class="field"> Photo de profil <input type="file" name="profile_image" accept="image/png,image/jpeg,image/webp,image/gif"> <small>JPG, PNG, WEBP ou GIF. 5 Mo maximum.</small> </label>
+    </div>
+    <%# Champs de texte et de préférences. %>
+    <div class="settings-fields">
+      <%# Nom complet (obligatoire, 120 caractères maximum). %>
+      <label class="field"> Nom complet <input type="text" name="full_name" value="<%= account.full_name %>" required maxlength="120"> </label>
+      <%# L'e-mail est affiché mais désactivé : il ne peut pas être modifié ici. %>
+      <label class="field"> Adresse e-mail <input type="email" value="<%= account.email %>" disabled> </label>
+      <%# Numéro de téléphone (facultatif). %>
+      <label class="field"> Téléphone <input type="tel" name="phone" value="<%= account.phone || '' %>"> </label>
+      <label class="field">
+        Thème
+        <%# Thème : système, clair ou sombre. La valeur enregistrée est appliquée via data-theme dans header.ejs. %>
+        <select name="theme">
+          <option value="system" <%= account.theme === 'system' ? 'selected' : '' %>>Suivre le système</option>
+          <option value="light" <%= account.theme === 'light' ? 'selected' : '' %>>Clair</option>
+          <option value="dark" <%= account.theme === 'dark' ? 'selected' : '' %>>Sombre</option>
+        </select>
+      </label>
+      <label class="field">
+        Langue
+        <%# Langue de l'interface (le site est en français), appliquée via <html lang> dans header.ejs. %>
+        <select name="language">
+          <option value="fr" <%= account.language === 'fr' ? 'selected' : '' %>>Français</option>
+        </select>
+      </label>
+      <label class="field">
+        Devise
+        <%# Devise préférée : franc congolais ou dollar américain. %>
+        <select name="currency">
+          <option value="CDF" <%= account.currency === 'CDF' ? 'selected' : '' %>>FC · Franc congolais</option>
+          <option value="USD" <%= account.currency === 'USD' ? 'selected' : '' %>>$ · Dollar américain</option>
+        </select>
+      </label>
+    </div>
+    <%# Enregistre le formulaire de profil. %>
+    <button class="btn btn-dark" type="submit">Enregistrer les paramètres</button>
+  </form>
+  <%# Formulaire de changement de mot de passe (envoi séparé). %>
+  <form action="/settings/security" method="post" class="settings-card" id="security">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">PROTECTION DU COMPTE</span>
+        <h2>Sécurité</h2>
+      </div>
+    </div>
+    <%# Mot de passe actuel, pour confirmer l'identité. %>
+    <label class="field"> Mot de passe actuel <input type="password" name="current_password" autocomplete="current-password" required> </label>
+    <%# Nouveau mot de passe, 8 caractères minimum. %>
+    <label class="field"> Nouveau mot de passe <input type="password" name="new_password" minlength="8" autocomplete="new-password" required> </label>
+    <%# Doit être identique au nouveau mot de passe (vérifié côté serveur). %>
+    <label class="field"> Confirmer le nouveau mot de passe <input type="password" name="confirm_password" minlength="8" autocomplete="new-password" required> </label>
+    <%# Conseil affiché à l'utilisateur. %>
+    <p class="form-note">Utilisez au moins 8 caractères et évitez les mots de passe faciles à deviner.</p>
+    <button class="btn btn-dark" type="submit">Modifier le mot de passe</button>
+  </form>
+</section>
+<%# Pied de page commun. %>
+<%- include("partials/footer") %>
