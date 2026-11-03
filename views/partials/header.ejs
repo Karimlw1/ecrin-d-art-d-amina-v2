@@ -50,14 +50,16 @@
         <a href="/shop?category=femme">Femme</a>
         <a href="/shop?category=homme">Homme</a>
         <a href="/shop?category=enfants">Enfants</a>
+        <a href="/settings">Paramètres</a>
         <%# Liens réservés aux clients connectés : compte, commandes, paramètres. %>
         <% if (user && user.role === "customer") { %>
           <a href="/account">Mon compte</a>
           <a href="/account">Mes commandes</a>
-          <a href="/settings">Paramètres</a>
         <% } %>
+
         <%# Lien « Admin » réservé aux administrateurs. %>
         <% if (user && user.role === "admin") { %>
+          <a href="/admin/orders">Commandes</a>
           <a href="/admin">Admin</a>
         <% } %>
         <%# Utilisateur connecté : déconnexion (formulaire POST caché, déclenché par le lien) ; sinon : connexion et création de compte. %>
@@ -69,12 +71,14 @@
           <a href="/register">Créer un compte</a>
         <% } %>
       </nav>
+      
       <%# Partie droite de l'en-tête : liens du compte et panier. %>
       <div class="header-actions">
         <% if (user) { %>
           <a href="/settings" class="small-link">Paramètres</a>
+        
           <%# Le lien Admin n'apparaît que pour le rôle « admin ». %>
-          <% if (user.role === "admin") { %>
+        <% if (user.role === "admin") { %>
             <a href="/admin" class="small-link">Admin</a>
           <% } %>
           <%# La déconnexion se fait par un formulaire POST (et non un simple lien) pour éviter qu'une simple visite d'URL la déclenche. %>
