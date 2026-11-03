@@ -4,6 +4,7 @@
 
 <%- include("partials/header", { title }) %>
 
+<%# HERO %>
 <section class="page-hero compact-hero">
   <img src="/uploads/EAblack.png" alt="">
 
@@ -18,16 +19,15 @@
 <section class="section checkout-layout">
 
   <%# FORMULAIRE DE COMMANDE %>
-
   <form
     action="/checkout"
-    method="post"
+    method="POST"
     enctype="multipart/form-data"
     class="checkout-form"
+    id="checkout-form"
   >
 
     <%# ÉTAPE 1 : CONTACT ET LIVRAISON %>
-
     <div class="form-panel">
 
       <h2>01 <span>Contact et livraison</span></h2>
@@ -39,46 +39,56 @@
       <div class="form-grid">
 
         <div class="field full-field">
-          <label>Nom complet *</label>
+          <label for="customer-name">Nom complet *</label>
 
           <input
             type="text"
+            id="customer-name"
             name="customer_name"
             value="<%= user ? user.full_name : '' %>"
             placeholder="Votre nom complet"
+            autocomplete="name"
             required
           >
         </div>
 
 
         <div class="field">
-          <label>Adresse e-mail</label>
+          <label for="customer-email">Adresse e-mail</label>
 
           <input
             type="email"
+            id="customer-email"
             name="customer_email"
             value="<%= user ? user.email : '' %>"
             placeholder="exemple@email.com"
+            autocomplete="email"
           >
         </div>
 
 
         <div class="field">
-          <label>Téléphone *</label>
+          <label for="customer-phone">Téléphone *</label>
 
           <input
             type="tel"
+            id="customer-phone"
             name="customer_phone"
             placeholder="+243..."
+            autocomplete="tel"
             required
           >
         </div>
 
 
         <div class="field">
-          <label>Pays *</label>
+          <label for="shipping-country">Pays *</label>
 
-          <select name="shipping_country" required>
+          <select
+            name="shipping_country"
+            id="shipping-country"
+            required
+          >
             <option value="RD Congo">RD Congo</option>
             <option value="Ouganda">Ouganda</option>
             <option value="Rwanda">Rwanda</option>
@@ -88,33 +98,38 @@
 
 
         <div class="field">
-          <label>Ville *</label>
+          <label for="shipping-city">Ville *</label>
 
           <input
             type="text"
+            id="shipping-city"
             name="shipping_city"
             placeholder="Goma, Kinshasa..."
+            autocomplete="address-level2"
             required
           >
         </div>
 
 
         <div class="field full-field">
-          <label>Adresse de livraison *</label>
+          <label for="shipping-address">Adresse de livraison *</label>
 
           <input
             type="text"
+            id="shipping-address"
             name="shipping_address"
             placeholder="Quartier, avenue, numéro de maison..."
+            autocomplete="street-address"
             required
           >
         </div>
 
 
         <div class="field full-field">
-          <label>Note supplémentaire</label>
+          <label for="customer-note">Note supplémentaire</label>
 
           <textarea
+            id="customer-note"
             name="customer_note"
             rows="3"
             placeholder="Un point de repère ou une précision pour la livraison..."
@@ -122,12 +137,10 @@
         </div>
 
       </div>
-
     </div>
 
 
     <%# ÉTAPE 2 : MODE DE PAIEMENT %>
-
     <div class="form-panel">
 
       <h2>02 <span>Mode de paiement</span></h2>
@@ -140,7 +153,6 @@
       <div class="payment-options">
 
         <%# AIRTEL MONEY %>
-
         <label class="payment-option">
 
           <input
@@ -161,7 +173,6 @@
 
 
         <%# ORANGE MONEY %>
-
         <label class="payment-option">
 
           <input
@@ -181,8 +192,7 @@
         </label>
 
 
-        <%# CASH ON DELIVERY %>
-
+        <%# PAIEMENT À LA LIVRAISON %>
         <label class="payment-option">
 
           <input
@@ -204,8 +214,7 @@
       </div>
 
 
-      <%# INSTRUCTIONS POUR MOBILE MONEY %>
-
+      <%# INSTRUCTIONS MOBILE MONEY %>
       <div id="mobile-payment-details" class="hidden">
 
         <div class="payment-instructions">
@@ -218,7 +227,6 @@
 
 
           <%# NUMÉRO DU BÉNÉFICIAIRE %>
-
           <div class="recipient-box">
 
             <span class="muted small">
@@ -226,7 +234,8 @@
             </span>
 
             <div class="recipient-number">
-              <strong id="recipient-number"></strong>
+
+              <strong id="recipient-number" aria-live="polite"></strong>
 
               <button
                 type="button"
@@ -235,6 +244,7 @@
               >
                 Copier
               </button>
+
             </div>
 
             <small id="recipient-provider"></small>
@@ -252,13 +262,14 @@
         </div>
 
 
-        <%# INFORMATIONS DU PAIEMENT %>
-
+        <%# PREUVE DE PAIEMENT %>
         <div class="form-grid payment-proof-fields">
 
           <div class="field full-field">
 
-            <label>Votre numéro Mobile Money *</label>
+            <label for="payer-phone">
+              Votre numéro Mobile Money *
+            </label>
 
             <input
               type="tel"
@@ -266,10 +277,13 @@
               id="payer-phone"
               placeholder="+2439XXXXXXXX"
               pattern="\+243[0-9]{9}"
+              maxlength="13"
+              autocomplete="tel"
             >
 
             <small>
               Le numéro depuis lequel vous avez envoyé l'argent.
+              Format : +243 suivi de 9 chiffres.
             </small>
 
           </div>
@@ -277,13 +291,16 @@
 
           <div class="field full-field">
 
-            <label>Référence de la transaction *</label>
+            <label for="provider-reference">
+              Référence de la transaction *
+            </label>
 
             <input
               type="text"
               name="provider_reference"
               id="provider-reference"
               placeholder="Ex. : 123456789ABC"
+              maxlength="190"
             >
 
             <small>
@@ -296,7 +313,9 @@
 
           <div class="field full-field">
 
-            <label>Capture d'écran du paiement *</label>
+            <label for="payment-proof">
+              Capture d'écran du paiement *
+            </label>
 
             <input
               type="file"
@@ -317,8 +336,7 @@
       </div>
 
 
-      <%# MESSAGE POUR LE PAIEMENT À LA LIVRAISON %>
-
+      <%# PAIEMENT À LA LIVRAISON %>
       <div id="cash-payment-message" class="notice-box hidden">
 
         <strong>Vous avez choisi le paiement à la livraison.</strong>
@@ -333,8 +351,7 @@
     </div>
 
 
-    <%# CONFIRMATION DE LA COMMANDE %>
-
+    <%# ÉTAPE 3 : CONFIRMATION %>
     <div class="form-panel checkout-confirmation">
 
       <h2>03 <span>Confirmation</span></h2>
@@ -346,6 +363,7 @@
       <button
         type="submit"
         class="btn btn-dark btn-full checkout-submit"
+        id="checkout-submit"
       >
         Confirmer ma commande <span>↗</span>
       </button>
@@ -362,7 +380,6 @@
 
 
   <%# RÉCAPITULATIF DE LA COMMANDE %>
-
   <aside class="summary-card checkout-summary">
 
     <h3>Votre commande</h3>
@@ -380,7 +397,11 @@
 
           <% if (item.image_url) { %>
 
-            <img src="<%= item.image_url %>" alt="">
+            <img
+              src="<%= item.image_url %>"
+              alt="<%= item.name %>"
+              loading="lazy"
+            >
 
           <% } else { %>
 
@@ -402,7 +423,7 @@
 
 
         <strong>
-          $<%= (item.price * item.quantity).toFixed(2) %>
+          $<%= (Number(item.price) * Number(item.quantity)).toFixed(2) %>
         </strong>
 
       </div>
@@ -415,7 +436,7 @@
       <span>Sous-total</span>
 
       <strong>
-        $<%= subtotal.toFixed(2) %>
+        $<%= Number(subtotal).toFixed(2) %>
       </strong>
 
     </div>
@@ -435,19 +456,21 @@
       <span>Total à payer</span>
 
       <strong>
-        $<%= subtotal.toFixed(2) %>
+        $<%= Number(subtotal).toFixed(2) %>
       </strong>
 
     </div>
 
 
     <div class="notice-box">
+
       <strong>Petit rappel</strong>
 
       <p>
         Pour Mobile Money, envoyez exactement le montant affiché
         et joignez votre preuve de paiement.
       </p>
+
     </div>
 
   </aside>
@@ -455,12 +478,9 @@
 </section>
 
 
-<%# JAVASCRIPT : AFFICHAGE DES CHAMPS SELON LE PAIEMENT %>
-
+<%# JAVASCRIPT : GESTION DU PAIEMENT %>
 <script>
-
-  // Récupérer les éléments HTML.
-
+  // Récupérer les éléments de la page.
   const paymentMethods = document.querySelectorAll(
     'input[name="payment_method"]'
   );
@@ -493,9 +513,26 @@
     "payment-proof"
   );
 
+  const copyButton = document.getElementById(
+    "copy-recipient"
+  );
 
-  // Mettre à jour les instructions selon le moyen de paiement.
 
+  // Numéros de réception des paiements.
+  const paymentRecipients = {
+    airtel_money: {
+      number: "0976203805",
+      provider: "Airtel Money"
+    },
+
+    orange_money: {
+      number: "0853958848",
+      provider: "Orange Money"
+    }
+  };
+
+
+  // Mettre à jour les informations selon le paiement choisi.
   function updatePaymentFields() {
 
     const selected = document.querySelector(
@@ -504,57 +541,50 @@
 
     const method = selected ? selected.value : "";
 
-
     const isMobileMoney =
       method === "airtel_money" ||
       method === "orange_money";
 
 
-    // Afficher ou masquer les informations Mobile Money.
-
+    // Afficher les instructions Mobile Money.
     mobileDetails.classList.toggle(
       "hidden",
       !isMobileMoney
     );
 
 
-    // Afficher ou masquer le message de paiement à la livraison.
-
+    // Afficher le message de paiement à la livraison.
     cashMessage.classList.toggle(
       "hidden",
       method !== "cash_on_delivery"
     );
 
 
-    // Rendre les champs obligatoires uniquement pour Mobile Money.
-
+    // Champs obligatoires uniquement pour Mobile Money.
     payerPhone.required = isMobileMoney;
     providerReference.required = isMobileMoney;
     paymentProof.required = isMobileMoney;
 
 
-    // Afficher le bon numéro du bénéficiaire.
+    // Afficher le bon numéro de réception.
+    if (isMobileMoney) {
 
-  if (
-  payment_method === "airtel_money" ||
-  payment_method === "orange_money"
-) {
-  const cleanPhone = String(payer_phone || "").replace(/\s/g, "");
+      const recipient = paymentRecipients[method];
 
-  if (!/^\+243\d{9}$/.test(cleanPhone)) {
-    req.flash("error", "Veuillez saisir un numéro valide au format +2439XXXXXXXX.");
-    return res.redirect("/checkout");
+      recipientNumber.textContent = recipient.number;
+      recipientProvider.textContent = recipient.provider;
+
+    } else {
+
+      recipientNumber.textContent = "";
+      recipientProvider.textContent = "";
+
+    }
+
   }
 
-  if (!provider_reference || !req.file) {
-    req.flash("error", "Veuillez fournir la référence et la capture du paiement.");
-    return res.redirect("/checkout");
-  }
-}
 
-
-  // Écouter le changement du mode de paiement.
-
+  // Écouter les changements du mode de paiement.
   paymentMethods.forEach(method => {
 
     method.addEventListener(
@@ -566,22 +596,112 @@
 
 
   // Copier le numéro du bénéficiaire.
+  copyButton.addEventListener("click", async function() {
 
-  document.getElementById("copy-recipient").addEventListener(
-    "click",
-    async function() {
+    const number = recipientNumber.textContent.trim();
 
-      try {
+    if (!number) {
+      return;
+    }
 
-        await navigator.clipboard.writeText(
-          recipientNumber.textContent
+    try {
+
+      await navigator.clipboard.writeText(number);
+
+      this.textContent = "Copié !";
+
+      setTimeout(() => {
+        this.textContent = "Copier";
+      }, 2000);
+
+    } catch (error) {
+
+      alert("Impossible de copier le numéro.");
+
+    }
+
+  });
+
+
+  // Vérifier les informations avant l'envoi.
+  document.getElementById("checkout-form").addEventListener(
+    "submit",
+    function(event) {
+
+      const selected = document.querySelector(
+        'input[name="payment_method"]:checked'
+      );
+
+      if (!selected) {
+        return;
+      }
+
+      const method = selected.value;
+
+      const isMobileMoney =
+        method === "airtel_money" ||
+        method === "orange_money";
+
+      if (!isMobileMoney) {
+        return;
+      }
+
+      // Vérifier le numéro Mobile Money.
+      const cleanPhone = payerPhone.value.replace(/\s/g, "");
+
+      if (!/^\+243[0-9]{9}$/.test(cleanPhone)) {
+
+        event.preventDefault();
+
+        payerPhone.setCustomValidity(
+          "Saisissez un numéro valide au format +243 suivi de 9 chiffres."
         );
 
-        this.textContent = "Copié !";
+        payerPhone.reportValidity();
 
-      } catch (error) {
+        return;
 
-        alert("Impossible de copier le numéro.");
+      }
+
+      payerPhone.setCustomValidity("");
+
+
+      // Vérifier la référence de transaction.
+      if (!providerReference.value.trim()) {
+
+        event.preventDefault();
+
+        providerReference.reportValidity();
+
+        return;
+
+      }
+
+
+      // Vérifier la capture d'écran.
+      if (!paymentProof.files.length) {
+
+        event.preventDefault();
+
+        paymentProof.reportValidity();
+
+        return;
+
+      }
+
+
+      // Vérifier la taille du fichier.
+      const file = paymentProof.files[0];
+
+      if (file.size > 5 * 1024 * 1024) {
+
+        event.preventDefault();
+
+        alert("La capture d'écran ne doit pas dépasser 5 Mo.");
+
+        paymentProof.value = "";
+
+        return;
 
       }
 
@@ -589,10 +709,8 @@
   );
 
 
-  // Initialiser les champs.
-
+  // Initialiser la page.
   updatePaymentFields();
-
 </script>
 
 
