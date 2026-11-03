@@ -1627,7 +1627,7 @@ td strong {
     background:#fff;
     border:1px solid var(--line);
     padding:19px 16px;
-    min-width:0
+    min-width:0;
     background: #fff;
     border: 1px solid var(--line);
     padding: 19px 16px;
@@ -1894,6 +1894,7 @@ td strong {
   margin-top: 2rem;
   padding-top: 2rem;
   border-top: 1px solid var(--line);
+  background: white;
 }
  
 .auth-section .empty-icon {
@@ -1908,14 +1909,13 @@ td strong {
 }
  
 .auth-section .empty-state h3 {
- display: flex;
+display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.9rem;
-    margin-top: 2rem;
-    padding-top: 2rem;
+    /* margin-top: 2rem; */
     border-top: 1px solid #f7f5f2;
-    color: var(--muted)
+    color: var(--muted);
 }
  
 .auth-section .btn {
