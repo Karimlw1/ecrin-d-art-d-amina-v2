@@ -240,12 +240,12 @@ if (livraisonBtn) {
 //hide authSection
 let authSection = document.getElementById("auth-section");
 const authBtn = document.getElementById("hideAuthSection");
-
+if(authSection && authBtn){
 authBtn.addEventListener("click", function () {
     authSection.style.display = "none";
     console.log("auth section hidden");
 });
-
+}
 //price conversion
 
 document.addEventListener("DOMContentLoaded", () => {
