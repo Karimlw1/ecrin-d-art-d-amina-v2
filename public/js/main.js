@@ -243,3 +243,36 @@ authBtn.addEventListener("click", function () {
     authSection.style.display = "none";
     console.log("auth section hidden");
 });
+
+//price conversion
+
+document.addEventListener("DOMContentLoaded", () => {
+    const variantSelect = document.querySelector("#variant");
+    const productPrice = document.querySelector("#product-price");
+
+    if (!variantSelect || !productPrice) return;
+
+    const currency = productPrice.dataset.currency;
+
+    function updatePrice() {
+        const selectedOption = variantSelect.selectedOptions[0];
+
+        if (!selectedOption || !selectedOption.value) return;
+
+        const price = currency === "CDF"
+            ? selectedOption.dataset.priceCdf
+            : selectedOption.dataset.price;
+
+        const formattedPrice = new Intl.NumberFormat("fr-FR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(Number(price));
+
+        productPrice.textContent =
+            `${formattedPrice} ${currency === "CDF" ? "FC" : "$"}`;
+    }
+
+    variantSelect.addEventListener("change", updatePrice);
+
+    updatePrice();
+});

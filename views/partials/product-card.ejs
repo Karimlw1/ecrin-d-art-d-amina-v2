@@ -24,12 +24,27 @@
     <%# Ligne prix et note. %>
     <div class="product-meta">
       <%# Prix le plus bas parmi les variantes (2 décimales) précédé de « dès » ; « Prix indisponible » s'il n'y a aucune variante. %>
+      
       <span class="price">
-        <% if (product.from_price != null) { %>
-          <small>dès</small>
-        <% } %>
-        <%= product.from_price == null ? "Prix indisponible" : "$" + Number(product.from_price).toFixed(2) %>
-      </span>
+  <% if (product.from_price != null) { %>
+    <small>dès</small>
+
+    <% const priceUSD = Number(product.from_price); %>
+    <% const price = currency === "CDF"
+        ? priceUSD * 2500
+        : priceUSD; %>
+
+    <%= currency === "CDF" ? "FC" : "$" %>
+    <%= price.toLocaleString("fr-FR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }) %>
+
+  <% } else { %>
+    <span>Prix indisponible</span>
+  <% } %>
+</span>
+
       <%# Note moyenne affichée seulement si le produit a des avis. %>
       <% if (product.average_rating) { %>
         <span class="rating">★ <%= product.average_rating %></span>

@@ -56,19 +56,34 @@ app.locals.label = (value) => LABELS[value] || String(value == null ? "" : value
 
 // Pool de connexions MySQL ; les paramètres sont lus dans le fichier .env.
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || "localhost",
-  port: Number(process.env.DB_PORT || 3306),
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "ashion_store",
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  decimalNumbers: true
+    host: process.env.DB_HOST || 'localhost',
+    port: Number(process.env.DB_PORT || 3306),
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'ashion_db',
+
+   ssl: {
+    minVersion: "TLSv1.2",
+    rejectUnauthorized: true
+},
+
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    decimalNumbers: true
 });
 
 // Les sessions sont stockées dans la base MySQL ; moteur de vues : EJS (dossier views).
 const sessionStore = new MySQLStore({}, pool);
+pool.getConnection()
+    .then(connection => {
+        console.log("TiDB database connected successfully!");
+        connection.release();
+    })
+    .catch(error => {
+        console.error("Database connection failed:", error.message);
+    });
+    
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 // Sécurité HTTP de base (helmet), lecture des formulaires et du JSON (1 Mo maximum).
@@ -525,6 +540,7 @@ app.get("/", async (req, res, next) => {
         res.render("home", {
             title: "Accueil",
             categories,
+            currency: req.session.user?.currency || "CDF",
             products: featured
         });
 
@@ -654,7 +670,8 @@ app.get("/shop", async (req, res, next) => {
       selectedSize: size || "",
       selectedColor: color || "",
       minPrice: min_price || "",
-      maxPrice: max_price || ""
+      maxPrice: max_price || "",
+      currency: req.session.user?.currency || "CDF"
     });
 
   } catch (err) {
@@ -674,7 +691,25 @@ app.get("/product/:slug", async (req, res, next) => {
       [product.id]
     );
     track(req, "product_view", product.id);
-    res.render("product", { title: product.name, product, reviews });
+    let currency = "CDF";
+
+if (req.session.user) {
+    const [users] = await pool.query(
+        "SELECT currency FROM users WHERE id = ?",
+        [req.session.user.id]
+    );
+
+    if (users.length) {
+        currency = users[0].currency || "CDF";
+    }
+}
+
+res.render("product", {
+    title: product.name,
+    product,
+    reviews,
+    currency
+});
   } catch (err) { next(err); }
 });
 
@@ -1370,7 +1405,7 @@ async function bootstrapAdmin() {
   try {
     await pool.query("SELECT 1");
     await bootstrapAdmin();
-    app.listen(PORT, "0.0.0.0", () => {
+    app.listen(PORT, "10.10.9.50", () => {
   console.log(`Ecrin d'art d'amina fonctionne sur le port ${PORT}`);
 });
   } catch (err) {

@@ -12,7 +12,7 @@
 <%# Déclaration du type de document HTML5. %>
 <!DOCTYPE html>
 <%# Langue et thème viennent des préférences de l'utilisateur connecté ; par défaut : français et thème clair. %>
-<html lang="<%= user && user.language ? user.language : 'fr' %>" data-theme="<%= user && user.theme ? user.theme : 'light' %>">
+<html lang="<%= user && user.language ? user.language : 'fr' %>" data-theme="light">
   <%# Tête du document : métadonnées, polices, feuille de style et script. %>
   <head>
     <%# Encodage des caractères (accents et symboles). %>

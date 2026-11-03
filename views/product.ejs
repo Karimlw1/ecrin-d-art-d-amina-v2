@@ -29,13 +29,39 @@
     <%# Formulaire d'ajout au panier : envoie la variante choisie (variant_id) et la quantité. %>
     <form action="/cart/add" method="post" class="variant-form">
       <label for="variant_id">Taille et couleur</label>
+
       <%# Liste des variantes. Chaque produit a des variantes (taille + couleur) avec prix et stock propres. %>
       <select id="variant_id" name="variant_id" required>
+
         <option value="">Choisissez votre taille et votre teinte</option>
         <%# Boucle : une option par variante. data-price et data-color sont lus par le script de la page ; les variantes épuisées sont désactivées et marquées « Épuisé ». %>
+       
         <% product.variants.forEach(v => { %>
-          <option value="<%= v.id %>" data-price="<%= Number(v.price).toFixed(2) %>" data-color="<%= v.color_hex %>" <%= v.stock_quantity < 1 ? "disabled" : "" %>><%= v.size %> · <%= v.color_name %> · $<%= Number(v.price).toFixed(2) %><%= v.stock_quantity < 1 ? " (Épuisé)" : "" %></option>
-        <% }) %>
+    <%
+        const priceUSD = Number(v.price);
+        const priceCDF = priceUSD * 2500;
+        const displayPrice = currency === "CDF"
+            ? priceCDF
+            : priceUSD;
+
+        const formattedPrice = new Intl.NumberFormat("fr-FR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(displayPrice);
+    %>
+
+    <option
+        value="<%= v.id %>"
+        data-price="<%= priceUSD.toFixed(2) %>"
+        data-price-cdf="<%= priceCDF.toFixed(2) %>"
+        data-color="<%= v.color_hex %>"
+        <%= v.stock_quantity < 1 ? "disabled" : "" %>
+    >
+        <%= v.size %> · <%= v.color_name %>
+        · <%= formattedPrice %> <%= currency === "CDF" ? "FC" : "$" %>
+        <%= v.stock_quantity < 1 ? "(Épuisé)" : "" %>
+    </option>
+<% }) %>
       </select>
       <%# Aperçu en direct (pastille de couleur, libellé, prix), rempli par le script grâce à ces identifiants. %>
       <div class="variant-preview">

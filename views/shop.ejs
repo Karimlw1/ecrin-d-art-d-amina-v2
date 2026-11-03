@@ -100,7 +100,10 @@
       <div class="product-grid">
         <%# Boucle : une vignette produit par produit. %>
         <% products.forEach(product => { %>
-          <%- include("partials/product-card", {product}) %>
+          <%- include("partials/product-card", {
+    product,
+    currency: currency || "CDF"
+}) %>
         <% }) %>
       </div>
     <% } else { %>
