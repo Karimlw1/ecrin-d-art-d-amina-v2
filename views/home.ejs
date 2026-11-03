@@ -8,7 +8,7 @@
   <%# Carrousel : une diapositive par produit mis en avant. %>
   <section class="hero-carousel">
     <%# S'il y a des produits : afficher le carrousel ; sinon (else plus bas) : afficher un message de bienvenue. %>
-    <% if (products.length) { %>
+    <% const productList = products || []; %>
       <%# Boucle : une diapositive par produit ; la première est « active ». %>
       <% products.forEach(function(product, index) { %>
         <%# Diapositive : l'image du produit sert de fond. %>
@@ -99,7 +99,7 @@
     <a class="underlined-link" href="/shop">Voir tous les produits</a>
   </div>
   <%# S'il y a des produits : la grille ; sinon : le message de catalogue vide. %>
-  <% if (products.length) { %>
+  <% const productList = products || []; %>
     <div class="product-grid">
       <%# Boucle : une vignette produit par produit. %>
       <% products.forEach(product => { %>
@@ -130,3 +130,4 @@
 </section>
 <%# Pied de page commun. %>
 <%- include("partials/footer") %>
+

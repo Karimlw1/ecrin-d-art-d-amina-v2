@@ -227,13 +227,15 @@ if (slides.length > 0) {
     startCarousel();
 }
 
-// hide livraison
-let livraisonBtn = document.getElementById("livraison");
+// Masquer l'image de livraison au clic
+const livraisonBtn = document.getElementById("livraison");
 
-livraisonBtn.addEventListener("click", function () {
-   livraisonBtn.style.display = "none";
-   console.log("livraison image hidden");
-});
+if (livraisonBtn) {
+    livraisonBtn.addEventListener("click", function () {
+        livraisonBtn.style.display = "none";
+        console.log("Image de livraison masquée");
+    });
+}
 
 //hide authSection
 let authSection = document.getElementById("auth-section");
