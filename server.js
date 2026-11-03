@@ -16,6 +16,8 @@ const multer = require("multer");
 const crypto = require("crypto");
 const fs = require("fs");
 const { sendEmail } = require("./utils/email");
+const { v2: cloudinary } = require("cloudinary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 // Création de l'application Express et choix du port d'écoute (3000 par défaut).
 const app = express();
@@ -1333,20 +1335,61 @@ app.get("/admin/customers", requireAdmin, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 // Paniers actifs et abandonnés avec leur contenu.
+
 app.get("/admin/carts", requireAdmin, async (req, res, next) => {
   try {
     const [carts] = await pool.query(
-      `SELECT c.*,u.full_name,u.email,COUNT(ci.id) AS item_count,
-       COALESCE(SUM(ci.quantity*v.price),0) AS cart_value,
-       GROUP_CONCAT(CONCAT(p.name,' (',v.size,' / ',v.color_name,') × ',ci.quantity) SEPARATOR ' | ') AS items
-       FROM carts c LEFT JOIN users u ON u.id=c.user_id
-       LEFT JOIN cart_items ci ON ci.cart_id=c.id LEFT JOIN product_variants v ON v.id=ci.variant_id
-       LEFT JOIN products p ON p.id=v.product_id
-       WHERE c.status IN ('active','abandoned') GROUP BY c.id ORDER BY c.last_activity DESC LIMIT 250`
+      `SELECT
+          c.*,
+          COALESCE(u.full_name, 'Visiteur invité') AS full_name,
+          COALESCE(u.email, 'Invité') AS email,
+          COUNT(ci.id) AS item_count,
+          COALESCE(SUM(ci.quantity * v.price), 0) AS cart_value,
+          GROUP_CONCAT(
+            CONCAT(
+              p.name, ' (',
+              v.size, ' / ',
+              v.color_name, ') × ',
+              ci.quantity
+            )
+            SEPARATOR ' | '
+          ) AS items
+
+       FROM carts c
+
+       LEFT JOIN users u
+          ON u.id = c.user_id
+
+       LEFT JOIN cart_items ci
+          ON ci.cart_id = c.id
+
+       LEFT JOIN product_variants v
+          ON v.id = ci.variant_id
+
+       LEFT JOIN products p
+          ON p.id = v.product_id
+
+       WHERE c.status IN ('active', 'abandoned')
+
+       GROUP BY c.id
+
+       HAVING COUNT(ci.id) > 0
+
+       ORDER BY c.last_activity DESC
+
+       LIMIT 250`
     );
-    res.render("admin/carts", { title: "Suivi des paniers", carts });
-  } catch (err) { next(err); }
+
+    res.render("admin/carts", {
+      title: "Suivi des paniers",
+      carts
+    });
+
+  } catch (err) {
+    next(err);
+  }
 });
+
 // Avis à modérer (les « en attente » d'abord).
 app.get("/admin/reviews", requireAdmin, async (req, res, next) => {
   try {
@@ -1432,6 +1475,48 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Configuration Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true
+});
+
+// Stockage séparé pour les preuves de paiement
+const paymentStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "ecrin-d-art-d-amina/payment_proofs",
+    resource_type: "image",
+    type: "authenticated",
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"]
+  }
+});
+
+// Middleware séparé pour les captures de paiement
+const paymentUpload = multer({
+  storage: paymentStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif"
+    ];
+
+    if (!allowedTypes.includes(file.mimetype)) {
+      return cb(
+        new Error("Téléversez une image JPG, PNG, WEBP ou GIF.")
+      );
+    }
+
+    cb(null, true);
+  }
+});
 
 
 // Crée le compte administrateur au premier démarrage à partir de ADMIN_EMAIL et ADMIN_PASSWORD du fichier .env.

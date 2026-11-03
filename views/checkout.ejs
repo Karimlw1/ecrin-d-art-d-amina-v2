@@ -1,142 +1,596 @@
-<%# checkout.ejs - page de commande (/checkout) : livraison, mode de paiement et récapitulatif. %>
-<%# Reçoit : title, items[], subtotal, user (facultatif, sert à pré-remplir le formulaire). %>
-<%# En-tête commun ; on lui transmet le titre de la page. %>
-<%- include("partials/header", {title}) %>
-<%# Bandeau de titre de la page. %>
+
+<%# checkout.ejs - Page de commande et de paiement. %>
+<%# Reçoit : title, items[], subtotal, user. %>
+
+<%- include("partials/header", { title }) %>
+
 <section class="page-hero compact-hero">
-  <img src="/uploads/EAblack.png" alt="" srcset="">
+  <img src="/uploads/EAblack.png" alt="">
+
   <span class="eyebrow">PRESQUE À VOUS</span>
-  <h1>Paiement <em>sécurisé.</em></h1>
-  <p>Vérifiez vos informations avant de passer commande.</p>
+
+  <h1>Finalisez votre <em>commande.</em></h1>
+
+  <p>Quelques informations et votre commande sera bientôt prête.</p>
 </section>
-<%# Disposition : formulaire de commande à gauche, récapitulatif à droite. %>
+
+
 <section class="section checkout-layout">
-  <%# Formulaire de commande : envoie les informations de livraison et le mode de paiement vers /checkout. %>
-  <form action="/checkout" method="post" class="checkout-form">
+
+  <%# FORMULAIRE DE COMMANDE %>
+
+  <form
+    action="/checkout"
+    method="post"
+    enctype="multipart/form-data"
+    class="checkout-form"
+  >
+
+    <%# ÉTAPE 1 : CONTACT ET LIVRAISON %>
+
     <div class="form-panel">
-      <%# Étape 1 : contact et livraison. %>
+
       <h2>01 <span>Contact et livraison</span></h2>
+
+      <p class="muted small">
+        Où pouvons-nous vous livrer ?
+      </p>
+
       <div class="form-grid">
+
         <div class="field full-field">
           <label>Nom complet *</label>
-          <%# Nom complet ; pré-rempli si l'utilisateur est connecté. %>
-          <input name="customer_name" value="<%= user ? user.full_name : '' %>" required>
+
+          <input
+            type="text"
+            name="customer_name"
+            value="<%= user ? user.full_name : '' %>"
+            placeholder="Votre nom complet"
+            required
+          >
         </div>
+
+
         <div class="field">
-          <label>E-mail</label>
-          <%# E-mail (facultatif) ; pré-rempli si connecté. %>
-          <input type="email" name="customer_email" value="<%= user ? user.email : '' %>">
+          <label>Adresse e-mail</label>
+
+          <input
+            type="email"
+            name="customer_email"
+            value="<%= user ? user.email : '' %>"
+            placeholder="exemple@email.com"
+          >
         </div>
+
+
         <div class="field">
-          <label>Numéro de téléphone *</label>
-          <%# Téléphone (obligatoire) pour joindre le client à la livraison. %>
-          <input name="customer_phone" placeholder="+243..." required>
+          <label>Téléphone *</label>
+
+          <input
+            type="tel"
+            name="customer_phone"
+            placeholder="+243..."
+            required
+          >
         </div>
+
+
         <div class="field">
-          <label>Pays</label>
-          <%# Pays de livraison. %>
-          <select name="shipping_country">
-            <option>RD Congo</option>
-            <option>Ouganda</option>
-            <option>Rwanda</option>
-            <option>Autre</option>
+          <label>Pays *</label>
+
+          <select name="shipping_country" required>
+            <option value="RD Congo">RD Congo</option>
+            <option value="Ouganda">Ouganda</option>
+            <option value="Rwanda">Rwanda</option>
+            <option value="Autre">Autre</option>
           </select>
         </div>
+
+
         <div class="field">
           <label>Ville *</label>
-          <%# Ville de livraison (obligatoire). %>
-          <input name="shipping_city" placeholder="Goma, Kinshasa..." required>
+
+          <input
+            type="text"
+            name="shipping_city"
+            placeholder="Goma, Kinshasa..."
+            required
+          >
         </div>
+
+
         <div class="field full-field">
-          <label>Adresse de livraison (rue) *</label>
-          <%# Adresse de livraison (obligatoire). %>
-          <input name="shipping_address" required>
+          <label>Adresse de livraison *</label>
+
+          <input
+            type="text"
+            name="shipping_address"
+            placeholder="Quartier, avenue, numéro de maison..."
+            required
+          >
         </div>
+
+
         <div class="field full-field">
-          <label>Note de commande (facultatif)</label>
-          <%# Note facultative : point de repère, heure souhaitée... %>
-          <textarea name="customer_note" rows="3" placeholder="Point de repère, heure de livraison souhaitée..."></textarea>
+          <label>Note supplémentaire</label>
+
+          <textarea
+            name="customer_note"
+            rows="3"
+            placeholder="Un point de repère ou une précision pour la livraison..."
+          ></textarea>
         </div>
+
       </div>
+
     </div>
+
+
+    <%# ÉTAPE 2 : MODE DE PAIEMENT %>
+
     <div class="form-panel">
-      <%# Étape 2 : mode de paiement (boutons radio, un choix obligatoire). %>
+
       <h2>02 <span>Mode de paiement</span></h2>
+
+      <p class="muted small">
+        Choisissez comment vous souhaitez payer.
+      </p>
+
+
       <div class="payment-options">
+
+        <%# AIRTEL MONEY %>
+
         <label class="payment-option">
-          <%# Option : Airtel Money (paiement mobile). %>
-          <input type="radio" name="payment_method" value="airtel_money" required>
+
+          <input
+            type="radio"
+            name="payment_method"
+            value="airtel_money"
+            required
+          >
+
           <span class="payment-icon">A</span>
+
           <span>
             <strong>Airtel Money</strong>
-            <small>RD Congo · numéro +243</small>
+            <small>Paiement mobile</small>
           </span>
+
         </label>
+
+
+        <%# ORANGE MONEY %>
+
         <label class="payment-option">
-          <%# Option : carte bancaire (pas encore reliée à un prestataire de paiement). %>
-          <input type="radio" name="payment_method" value="card" required>
-          <span class="payment-icon">▤</span>
+
+          <input
+            type="radio"
+            name="payment_method"
+            value="orange_money"
+            required
+          >
+
+          <span class="payment-icon">O</span>
+
           <span>
-            <strong>Carte bancaire</strong>
-            <small>Intégration du paiement par carte requise avant d'accepter de vrais paiements</small>
+            <strong>Orange Money</strong>
+            <small>Paiement mobile</small>
           </span>
+
         </label>
+
+
+        <%# CASH ON DELIVERY %>
+
         <label class="payment-option">
-          <%# Option : paiement en espèces à la livraison. %>
-          <input type="radio" name="payment_method" value="cash_on_delivery" required>
+
+          <input
+            type="radio"
+            name="payment_method"
+            value="cash_on_delivery"
+            required
+          >
+
           <span class="payment-icon">₣</span>
+
           <span>
             <strong>Paiement à la livraison</strong>
-            <small>Payez à la réception de votre commande</small>
+            <small>Payez lorsque vous recevez votre commande.</small>
           </span>
+
         </label>
+
       </div>
-      <%# Champ du numéro Airtel, caché par défaut ; le script de la page doit l'afficher quand Airtel Money est choisi. Format : +243 suivi de 9 chiffres. %>
-      <div class="field airtel-phone hidden">
-        <label>Numéro Airtel Money (RDC) *</label>
-        <input name="payer_phone" placeholder="+2439XXXXXXXX" pattern="\+243[0-9]{9}">
-        <small>Utilisez +243 suivi de 9 chiffres. Le paiement reste en attente de confirmation jusqu'à sa vérification.</small>
-      </div>
-    </div>
-    <%# Bouton « Passer la commande ». %>
-    <button class="btn btn-dark btn-full checkout-submit">Passer la commande <span>↗</span></button>
-    <%# Avertissement : aucun paiement réel n'est prélevé dans cette version de démarrage. %>
-    <p class="muted small">Les transactions par carte et Airtel Money ne sont pas débitées automatiquement dans cette version de démarrage. La boutique doit connecter un prestataire de paiement vérifié avant d'accepter des paiements en ligne réels.</p>
-  </form>
-  <%# Récapitulatif avec chaque article et les totaux. %>
-  <aside class="summary-card checkout-summary">
-    <h3>Votre commande</h3>
-    <%# Boucle : une ligne par article (miniature, nom, variante, quantité, total de ligne). %>
-    <% items.forEach(item => { %>
-      <div class="checkout-item">
-        <div class="checkout-thumb">
-          <% if (item.image_url) { %>
-            <img src="<%= item.image_url %>" alt="">
-          <% } else { %>
-            A.
-          <% } %>
+
+
+      <%# INSTRUCTIONS POUR MOBILE MONEY %>
+
+      <div id="mobile-payment-details" class="hidden">
+
+        <div class="payment-instructions">
+
+          <h3>Comment effectuer votre paiement ?</h3>
+
+          <p>
+            Suivez ces étapes pour envoyer votre argent.
+          </p>
+
+
+          <%# NUMÉRO DU BÉNÉFICIAIRE %>
+
+          <div class="recipient-box">
+
+            <span class="muted small">
+              Envoyez votre paiement à ce numéro :
+            </span>
+
+            <div class="recipient-number">
+              <strong id="recipient-number"></strong>
+
+              <button
+                type="button"
+                id="copy-recipient"
+                class="btn btn-small"
+              >
+                Copier
+              </button>
+            </div>
+
+            <small id="recipient-provider"></small>
+
+          </div>
+
+
+          <ol class="payment-steps">
+            <li>Ouvrez votre application Mobile Money.</li>
+            <li>Envoyez le montant exact de votre commande au numéro indiqué.</li>
+            <li>Conservez le message de confirmation de la transaction.</li>
+            <li>Revenez ici pour compléter les informations ci-dessous.</li>
+          </ol>
+
         </div>
+
+
+        <%# INFORMATIONS DU PAIEMENT %>
+
+        <div class="form-grid payment-proof-fields">
+
+          <div class="field full-field">
+
+            <label>Votre numéro Mobile Money *</label>
+
+            <input
+              type="tel"
+              name="payer_phone"
+              id="payer-phone"
+              placeholder="+2439XXXXXXXX"
+              pattern="\+243[0-9]{9}"
+            >
+
+            <small>
+              Le numéro depuis lequel vous avez envoyé l'argent.
+            </small>
+
+          </div>
+
+
+          <div class="field full-field">
+
+            <label>Référence de la transaction *</label>
+
+            <input
+              type="text"
+              name="provider_reference"
+              id="provider-reference"
+              placeholder="Ex. : 123456789ABC"
+            >
+
+            <small>
+              Vous trouverez cette référence dans votre SMS
+              ou votre reçu Mobile Money.
+            </small>
+
+          </div>
+
+
+          <div class="field full-field">
+
+            <label>Capture d'écran du paiement *</label>
+
+            <input
+              type="file"
+              name="payment_proof"
+              id="payment-proof"
+              accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
+            >
+
+            <small>
+              Formats acceptés : JPG, PNG, WEBP ou GIF.
+              Taille maximale : 5 Mo.
+            </small>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <%# MESSAGE POUR LE PAIEMENT À LA LIVRAISON %>
+
+      <div id="cash-payment-message" class="notice-box hidden">
+
+        <strong>Vous avez choisi le paiement à la livraison.</strong>
+
+        <p>
+          Aucun transfert Mobile Money n'est nécessaire.
+          Vous réglerez votre commande à sa réception.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <%# CONFIRMATION DE LA COMMANDE %>
+
+    <div class="form-panel checkout-confirmation">
+
+      <h2>03 <span>Confirmation</span></h2>
+
+      <p class="muted small">
+        Vérifiez vos informations avant de terminer.
+      </p>
+
+      <button
+        type="submit"
+        class="btn btn-dark btn-full checkout-submit"
+      >
+        Confirmer ma commande <span>↗</span>
+      </button>
+
+      <p class="muted small">
+        Pour Mobile Money, votre commande sera enregistrée
+        en attente de vérification. Notre équipe vérifiera
+        la transaction avant de confirmer le paiement.
+      </p>
+
+    </div>
+
+  </form>
+
+
+  <%# RÉCAPITULATIF DE LA COMMANDE %>
+
+  <aside class="summary-card checkout-summary">
+
+    <h3>Votre commande</h3>
+
+    <p class="muted small">
+      Vérifiez les articles avant de commander.
+    </p>
+
+
+    <% items.forEach(item => { %>
+
+      <div class="checkout-item">
+
+        <div class="checkout-thumb">
+
+          <% if (item.image_url) { %>
+
+            <img src="<%= item.image_url %>" alt="">
+
+          <% } else { %>
+
+            A.
+
+          <% } %>
+
+        </div>
+
+
         <div>
           <strong><%= item.name %></strong>
-          <small><%= item.size %> · <%= item.color_name %> × <%= item.quantity %></small>
+
+          <small>
+            <%= item.size %> · <%= item.color_name %>
+            × <%= item.quantity %>
+          </small>
         </div>
-        <strong>$<%= (item.price*item.quantity).toFixed(2) %></strong>
+
+
+        <strong>
+          $<%= (item.price * item.quantity).toFixed(2) %>
+        </strong>
+
       </div>
+
     <% }) %>
+
+
     <div class="summary-line">
-      <%# Sous-total, note de livraison et total. %>
+
       <span>Sous-total</span>
-      <strong>$<%= subtotal.toFixed(2) %></strong>
+
+      <strong>
+        $<%= subtotal.toFixed(2) %>
+      </strong>
+
     </div>
+
+
     <div class="summary-line">
+
       <span>Livraison</span>
-      <span>Confirmée par la boutique</span>
+
+      <span>À confirmer</span>
+
     </div>
+
+
     <div class="summary-line summary-total">
-      <span>Total</span>
-      <strong>$<%= subtotal.toFixed(2) %></strong>
+
+      <span>Total à payer</span>
+
+      <strong>
+        $<%= subtotal.toFixed(2) %>
+      </strong>
+
     </div>
+
+
+    <div class="notice-box">
+      <strong>Petit rappel</strong>
+
+      <p>
+        Pour Mobile Money, envoyez exactement le montant affiché
+        et joignez votre preuve de paiement.
+      </p>
+    </div>
+
   </aside>
+
 </section>
-<%# Pied de page commun. %>
+
+
+<%# JAVASCRIPT : AFFICHAGE DES CHAMPS SELON LE PAIEMENT %>
+
+<script>
+
+  // Récupérer les éléments HTML.
+
+  const paymentMethods = document.querySelectorAll(
+    'input[name="payment_method"]'
+  );
+
+  const mobileDetails = document.getElementById(
+    "mobile-payment-details"
+  );
+
+  const cashMessage = document.getElementById(
+    "cash-payment-message"
+  );
+
+  const recipientNumber = document.getElementById(
+    "recipient-number"
+  );
+
+  const recipientProvider = document.getElementById(
+    "recipient-provider"
+  );
+
+  const payerPhone = document.getElementById(
+    "payer-phone"
+  );
+
+  const providerReference = document.getElementById(
+    "provider-reference"
+  );
+
+  const paymentProof = document.getElementById(
+    "payment-proof"
+  );
+
+
+  // Mettre à jour les instructions selon le moyen de paiement.
+
+  function updatePaymentFields() {
+
+    const selected = document.querySelector(
+      'input[name="payment_method"]:checked'
+    );
+
+    const method = selected ? selected.value : "";
+
+
+    const isMobileMoney =
+      method === "airtel_money" ||
+      method === "orange_money";
+
+
+    // Afficher ou masquer les informations Mobile Money.
+
+    mobileDetails.classList.toggle(
+      "hidden",
+      !isMobileMoney
+    );
+
+
+    // Afficher ou masquer le message de paiement à la livraison.
+
+    cashMessage.classList.toggle(
+      "hidden",
+      method !== "cash_on_delivery"
+    );
+
+
+    // Rendre les champs obligatoires uniquement pour Mobile Money.
+
+    payerPhone.required = isMobileMoney;
+    providerReference.required = isMobileMoney;
+    paymentProof.required = isMobileMoney;
+
+
+    // Afficher le bon numéro du bénéficiaire.
+
+    if (method === "airtel_money") {
+
+      recipientNumber.textContent = "0976203805";
+      recipientProvider.textContent = "Airtel Money";
+
+    } else if (method === "orange_money") {
+
+      recipientNumber.textContent = "0853958848";
+      recipientProvider.textContent = "Orange Money";
+
+    }
+
+  }
+
+
+  // Écouter le changement du mode de paiement.
+
+  paymentMethods.forEach(method => {
+
+    method.addEventListener(
+      "change",
+      updatePaymentFields
+    );
+
+  });
+
+
+  // Copier le numéro du bénéficiaire.
+
+  document.getElementById("copy-recipient").addEventListener(
+    "click",
+    async function() {
+
+      try {
+
+        await navigator.clipboard.writeText(
+          recipientNumber.textContent
+        );
+
+        this.textContent = "Copié !";
+
+      } catch (error) {
+
+        alert("Impossible de copier le numéro.");
+
+      }
+
+    }
+  );
+
+
+  // Initialiser les champs.
+
+  updatePaymentFields();
+
+</script>
+
+
 <%- include("partials/footer") %>

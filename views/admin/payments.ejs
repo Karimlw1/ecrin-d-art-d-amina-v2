@@ -1,72 +1,161 @@
-<%# admin/payments.ejs - paiements enregistrés avec formulaire de changement de statut. %>
-<%# Reçoit : title, payments[]. %>
-<%# Haut de la mise en page admin ; surligne « Paiements » dans le menu. %>
+<%# admin/payments.ejs - Suivi et vérification des paiements. %>
+<%# Reçoit : title, payments[]. Chaque paiement peut contenir proof_url. %>
+
 <%- include("partials-top", {title, active:"payments"}) %>
-<%# Avis de sécurité : les statuts sont seulement enregistrés ici ; rien n'est débité ni vérifié automatiquement. %>
-<div class="notice-box"><strong>Sécurité des paiements :</strong> ce tableau de bord enregistre le statut des paiements. Il ne débite pas les cartes et ne vérifie pas Airtel Money automatiquement. Vérifiez la transaction officielle auprès du prestataire avant de marquer une commande comme payée.</div>
+
+<div class="notice-box">
+  <strong>Sécurité des paiements :</strong>
+  vérifiez chaque transaction auprès du prestataire officiel
+  avant de marquer une commande comme payée.
+  Le téléchargement d'une capture ne confirme pas automatiquement
+  un paiement.
+</div>
+
 <div class="admin-panel">
+
   <div class="panel-heading">
     <div>
       <span class="eyebrow">MOUVEMENTS D'ARGENT</span>
       <h2>Enregistrements de paiements</h2>
     </div>
   </div>
+
   <div class="table-wrap">
     <table>
-      <%# En-têtes du tableau. %>
+
       <thead>
         <tr>
           <th>Commande / client</th>
           <th>Moyen et montant</th>
           <th>Payeur</th>
-          <th>Statut du paiement</th>
+          <th>Preuve de paiement</th>
+          <th>Statut</th>
           <th>Mise à jour (admin)</th>
         </tr>
       </thead>
+
       <tbody>
-        <%# Ligne affichée quand il n'y a aucun paiement. %>
-        <% if(!payments.length){ %>
+
+        <% if (!payments.length) { %>
           <tr>
-            <td colspan="5" class="muted">Aucun paiement enregistré pour le moment.</td>
+            <td colspan="6" class="muted">
+              Aucun paiement enregistré pour le moment.
+            </td>
           </tr>
         <% } %>
-        <%# Boucle : une ligne par paiement. %>
-        <% payments.forEach(p=>{ %>
+
+        <% payments.forEach(p => { %>
+
           <tr>
-            <td><strong><%= p.order_number %></strong><br><%= p.customer_name %><br><small><%= new Date(p.created_at).toLocaleString("fr-FR") %></small></td>
-            <%# Prestataire de paiement et montant avec la devise. %>
-            <td><%= label(p.provider) %><br><strong>$<%= Number(p.amount).toFixed(2) %> <%= p.currency %></strong></td>
-            <%# Téléphone du payeur, ou à défaut celui du client. %>
-            <td><%= p.payer_phone || p.customer_phone %></td>
+
             <td>
-              <span class="status-pill status-<%= p.status %>"><%= label(p.status) %></span>
-              <%# La référence du prestataire n'est affichée que si elle a été saisie. %>
-              <% if(p.provider_reference){ %>
+              <strong><%= p.order_number %></strong>
+              <br>
+              <%= p.customer_name %>
+              <br>
+              <small>
+                <%= new Date(p.created_at).toLocaleString("fr-FR") %>
+              </small>
+            </td>
+
+            <td>
+              <%= label(p.provider) %>
+              <br>
+              <strong>
+                $<%= Number(p.amount).toFixed(2) %>
+                <%= p.currency %>
+              </strong>
+            </td>
+
+            <td>
+              <%= p.payer_phone || p.customer_phone || "Non renseigné" %>
+            </td>
+
+            <td>
+              <% if (p.proof_url) { %>
+
+                <a
+                  href="<%= p.proof_url %>"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn btn-dark btn-small"
+                >
+                  Voir la capture
+                </a>
+
+              <% } else { %>
+
+                <span class="muted">Aucune capture</span>
+
+              <% } %>
+
+              <% if (p.provider_reference) { %>
                 <br>
-                <small>Réf. : <%= p.provider_reference %></small>
+                <small>
+                  Réf. : <%= p.provider_reference %>
+                </small>
               <% } %>
             </td>
+
             <td>
-              <%# Formulaire de mise à jour : envoie statut, référence et note vers /admin/payments/:id/status. %>
-              <form action="/admin/payments/<%= p.id %>/status" method="post" class="payment-admin-form">
+              <span class="status-pill status-<%= p.status %>">
+                <%= label(p.status) %>
+              </span>
+            </td>
+
+            <td>
+              <form
+                action="/admin/payments/<%= p.id %>/status"
+                method="post"
+                class="payment-admin-form"
+              >
+
                 <select name="status">
-                  <%# Boucle sur les statuts de paiement autorisés ; le statut actuel est présélectionné. %>
-                  <% ["pending","awaiting_confirmation","paid","failed","refunded"].forEach(s=>{ %>
-                    <option value="<%= s %>" <%= p.status===s?'selected':'' %>><%= label(s) %></option>
+                  <% [
+                    "pending",
+                    "awaiting_confirmation",
+                    "paid",
+                    "failed",
+                    "refunded"
+                  ].forEach(s => { %>
+
+                    <option
+                      value="<%= s %>"
+                      <%= p.status === s ? "selected" : "" %>
+                    >
+                      <%= label(s) %>
+                    </option>
+
                   <% }) %>
                 </select>
-                <%# Référence de transaction du prestataire (ex. Airtel Money). %>
-                <input name="provider_reference" value="<%= p.provider_reference||'' %>" placeholder="Référence du prestataire">
-                <%# Note interne. %>
-                <input name="admin_note" value="<%= p.admin_note||'' %>" placeholder="Note de l'administrateur">
-                <button class="btn btn-dark btn-small">Mettre à jour</button>
+
+                <input
+                  name="provider_reference"
+                  value="<%= p.provider_reference || '' %>"
+                  placeholder="Référence de transaction"
+                >
+
+                <input
+                  name="admin_note"
+                  value="<%= p.admin_note || '' %>"
+                  placeholder="Note de l'administrateur"
+                >
+
+                <button class="btn btn-dark btn-small">
+                  Mettre à jour
+                </button>
+
               </form>
             </td>
+
           </tr>
+
         <% }) %>
+
       </tbody>
     </table>
   </div>
+
 </div>
-<%# Bas de la mise en page admin. %>
+
 <%- include("partials-bottom") %>

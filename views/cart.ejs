@@ -1,81 +1,512 @@
-<%# cart.ejs - page du panier (/cart). %>
+
+<%# cart.ejs - Panier de la boutique. %>
 <%# Reçoit : title, items[], subtotal. %>
-<%# En-tête commun ; on lui transmet le titre de la page. %>
-<%- include("partials/header", {title}) %>
-<%# Bandeau de titre de la page. %>
+
+<%- include("partials/header", { title }) %>
+
+
+<%# INTRODUCTION %>
+<style>
+  
+/* CART PAGE */
+
+.cart-list-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.cart-list-heading h2 {
+  margin: 8px 0 0;
+}
+
+.cart-item {
+  align-items: center;
+  gap: 22px;
+  padding: 24px 0;
+}
+
+.cart-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cart-variant {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--muted, #777);
+  font-size: 13px;
+}
+
+.cart-color {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cart-unit-price {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cart-item-total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.cart-item-total .line-total {
+  font-size: 17px;
+}
+
+.quantity-form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.quantity-form label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.quantity-form input {
+  width: 65px;
+  min-height: 40px;
+  text-align: center;
+}
+
+.quantity-form .text-button {
+  cursor: pointer;
+}
+
+.cart-bottom-link {
+  padding-top: 20px;
+}
+
+.cart-summary h3 {
+  margin-top: 10px;
+  margin-bottom: 25px;
+}
+
+.cart-delivery-note {
+  line-height: 1.7;
+  margin: 18px 0;
+}
+
+.cart-checkout-btn {
+  text-align: center;
+}
+
+.cart-security-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  color: var(--muted, #777);
+}
+
+.cart-security-note span {
+  font-size: 20px;
+}
+
+.cart-security-note small {
+  line-height: 1.5;
+}
+
+.cart-empty {
+  width: 100%;
+  text-align: center;
+  padding: 65px 20px;
+}
+
+.cart-empty p {
+  max-width: 420px;
+  margin: 12px auto 24px;
+  line-height: 1.7;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 700px) {
+
+  .cart-list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .cart-item {
+    display: grid;
+    grid-template-columns: 100px minmax(0, 1fr);
+    gap: 15px;
+    align-items: start;
+  }
+
+  .cart-thumb {
+    width: 100px;
+    height: 125px;
+  }
+
+  .cart-item-info {
+    gap: 9px;
+  }
+
+  .cart-item-total {
+    grid-column: 2;
+    align-items: flex-start;
+  }
+
+  .quantity-form {
+    gap: 8px;
+  }
+
+  .cart-summary {
+    width: 100%;
+  }
+
+}
+
+</style>
+
 <section class="page-hero compact-hero">
-  <img src="/uploads/EAblack.png" alt="" srcset="">
+
+  <img src="/uploads/EAblack.png" alt="">
+
   <span class="eyebrow">VOTRE SÉLECTION</span>
-  <h1>Mon <em>panier.</em></h1>
-  <p>De bons choix. Faisons-en les vôtres.</p>
+
+  <h1>Votre <em>panier.</em></h1>
+
+  <p>
+    Prenez un dernier instant pour vérifier votre sélection.
+  </p>
+
 </section>
-<%# Disposition : liste des articles à gauche, récapitulatif à droite. %>
+
+
+<%# CONTENU DU PANIER %>
+
 <section class="section cart-layout">
-  <%# Panier vide : message d'invitation ; sinon (else) : liste des articles et récapitulatif. %>
+
+
+  <%# PANIER VIDE %>
+
   <% if (!items.length) { %>
+
     <div class="empty-state cart-empty">
+
       <div class="empty-icon">♡</div>
-      <h3>Votre Panier est vide.</h3>
-      <p>Trouvez ce que vous aimez, cela vous attendra ici.</p>
-      <a class="btn btn-dark" href="/shop">Découvrir la boutique ↗</a>
+
+      <span class="eyebrow">VOTRE PANIER VOUS ATTEND</span>
+
+      <h3>Il est encore vide.</h3>
+
+      <p>
+        Découvrez nos collections et trouvez les pièces
+        qui vous correspondent.
+      </p>
+
+      <a href="/shop" class="btn btn-dark">
+        Découvrir la boutique ↗
+      </a>
+
     </div>
+
+
   <% } else { %>
-    <%# Liste des articles du panier. %>
+
+
+    <%# LISTE DES ARTICLES %>
+
     <div class="cart-items">
-      <%# Boucle : un bloc par article du panier. %>
+
+
+      <div class="cart-list-heading">
+
+        <div>
+          <span class="eyebrow">VOTRE SÉLECTION</span>
+
+          <h2>
+            Mes articles
+            <span class="muted">(<%= items.length %>)</span>
+          </h2>
+        </div>
+
+        <a href="/shop" class="continue-link">
+          Continuer mes achats
+        </a>
+
+      </div>
+
+
+      <%# AFFICHER CHAQUE ARTICLE %>
+
       <% items.forEach(item => { %>
+
         <article class="cart-item">
-          <%# Miniature liée au produit, avec cadre de remplacement s'il n'y a pas d'image. %>
-          <a href="/product/<%= item.slug %>" class="cart-thumb">
+
+
+          <%# IMAGE DU PRODUIT %>
+
+          <a
+            href="/product/<%= item.slug %>"
+            class="cart-thumb"
+          >
+
             <% if (item.image_url) { %>
-              <img src="<%= item.image_url %>" alt="">
+
+              <img
+                src="<%= item.image_url %>"
+                alt="<%= item.name %>"
+              >
+
             <% } else { %>
-              <div class="image-placeholder">A.</div>
+
+              <div class="image-placeholder">
+                A.
+              </div>
+
             <% } %>
+
           </a>
-          <%# Nom, détails de la variante, prix unitaire et quantité. %>
+
+
+          <%# INFORMATIONS DU PRODUIT %>
+
           <div class="cart-item-info">
-            <a class="product-name" href="/product/<%= item.slug %>"><%= item.name %></a>
-            <%# Variante : taille, pastille de couleur (couleur issue de color_hex) et nom de la couleur. %>
-            <span class="muted"><%= item.size %> · <span class="color-dot tiny" style="background: <%= item.color_hex %>"></span> <%= item.color_name %></span>
-            <strong>$<%= Number(item.price).toFixed(2) %></strong>
-            <%# Formulaire de mise à jour de la quantité ; 0 retire l'article. %>
-            <form action="/cart/update" method="post" class="quantity-form">
-              <input type="hidden" name="cart_item_id" value="<%= item.cart_item_id %>">
-              <input type="number" name="quantity" min="0" max="20" value="<%= item.quantity %>" aria-label="Quantité">
-              <button class="text-button">Mettre à jour</button>
-              <span class="muted">Mettez 0 pour retirer</span>
+
+
+            <a
+              href="/product/<%= item.slug %>"
+              class="product-name"
+            >
+              <%= item.name %>
+            </a>
+
+
+            <%# TAILLE ET COULEUR %>
+
+            <div class="cart-variant">
+
+              <span>
+                Taille : <strong><%= item.size %></strong>
+              </span>
+
+              <span class="cart-color">
+
+                <span
+                  class="color-dot tiny"
+                  style="background: <%= item.color_hex || '#ccc' %>"
+                ></span>
+
+                <%= item.color_name %>
+
+              </span>
+
+            </div>
+
+
+            <%# PRIX UNITAIRE %>
+
+            <div class="cart-unit-price">
+
+              <span class="muted small">
+                Prix unitaire
+              </span>
+
+              <strong>
+                $<%= Number(item.price).toFixed(2) %>
+              </strong>
+
+            </div>
+
+
+            <%# QUANTITÉ %>
+
+            <form
+              action="/cart/update"
+              method="post"
+              class="quantity-form"
+            >
+
+              <input
+                type="hidden"
+                name="cart_item_id"
+                value="<%= item.cart_item_id %>"
+              >
+
+              <label>
+                Quantité
+              </label>
+
+              <input
+                type="number"
+                name="quantity"
+                min="0"
+                max="20"
+                value="<%= item.quantity %>"
+                aria-label="Quantité de <%= item.name %>"
+                required
+              >
+
+              <button type="submit" class="text-button">
+                Mettre à jour
+              </button>
+
             </form>
+
+
+            <small class="muted">
+              Pour retirer cet article, mettez sa quantité à 0.
+            </small>
+
           </div>
-          <%# Total de la ligne = prix unitaire × quantité. %>
-          <strong class="line-total">$<%= (item.price*item.quantity).toFixed(2) %></strong>
+
+
+          <%# TOTAL DE L'ARTICLE %>
+
+          <div class="cart-item-total">
+
+            <span class="muted small">
+              Total
+            </span>
+
+            <strong class="line-total">
+              $<%= (Number(item.price) * item.quantity).toFixed(2) %>
+            </strong>
+
+          </div>
+
+
         </article>
+
       <% }) %>
+
+
+      <%# CONTINUER LES ACHATS %>
+
+      <div class="cart-bottom-link">
+
+        <a href="/shop" class="continue-link">
+          ← Continuer mes achats
+        </a>
+
+      </div>
+
     </div>
-    <%# Carte récapitulative de la commande. %>
-    <aside class="summary-card">
-      <h3>Récapitulatif de la commande</h3>
+
+
+
+    <%# RÉCAPITULATIF %>
+
+    <aside class="summary-card cart-summary">
+
+
+      <span class="eyebrow">EN UN COUP D'ŒIL</span>
+
+      <h3>Résumé de la commande</h3>
+
+
+      <%# NOMBRE D'ARTICLES %>
+
       <div class="summary-line">
-        <%# Sous-total de tous les articles. %>
+
+        <span>Articles</span>
+
+        <strong>
+          <%= items.reduce((total, item) => total + Number(item.quantity), 0) %>
+        </strong>
+
+      </div>
+
+
+      <%# SOUS-TOTAL %>
+
+      <div class="summary-line">
+
         <span>Sous-total</span>
-        <strong>$<%= subtotal.toFixed(2) %></strong>
+
+        <strong>
+          $<%= subtotal.toFixed(2) %>
+        </strong>
+
       </div>
+
+
+      <%# LIVRAISON %>
+
       <div class="summary-line">
-        <%# Les frais de livraison ne sont pas calculés ici ; la boutique les confirme ensuite. %>
+
         <span>Livraison</span>
-        <span>Calculée ultérieurement</span>
+
+        <span class="muted">
+          À confirmer
+        </span>
+
       </div>
-      <%# Total estimé (identique au sous-total pour l'instant). %>
+
+
+      <%# TOTAL ESTIMÉ %>
+
       <div class="summary-line summary-total">
+
         <span>Total estimé</span>
-        <strong>$<%= subtotal.toFixed(2) %></strong>
+
+        <strong>
+          $<%= subtotal.toFixed(2) %>
+        </strong>
+
       </div>
-      <p class="muted small">Les frais de livraison, le cas échéant, seront confirmés par la boutique.</p>
-      <%# Passe à la commande. %>
-      <a href="/checkout" class="btn btn-dark btn-full">Passer à la commande ↗</a>
-      <a href="/shop" class="continue-link">Continuer mes achats</a>
+
+
+      <p class="muted small cart-delivery-note">
+
+        Les éventuels frais de livraison seront confirmés
+        par notre équipe avant la finalisation de votre commande.
+
+      </p>
+
+
+      <%# PASSER À LA COMMANDE %>
+
+      <a
+        href="/checkout"
+        class="btn btn-dark btn-full cart-checkout-btn"
+      >
+        Passer à la commande ↗
+      </a>
+
+
+      <div class="cart-security-note">
+
+        <span>♡</span>
+
+        <small>
+          Vos informations seront utilisées uniquement
+          pour traiter votre commande.
+        </small>
+
+      </div>
+
+
     </aside>
+
+
   <% } %>
+
+
 </section>
-<%# Pied de page commun. %>
+
+
+<%# PIED DE PAGE %>
+
 <%- include("partials/footer") %>
