@@ -625,7 +625,11 @@ main {
 
 .empty-icon {
     font-size:40px;
-    color:var(--accent)
+    color:black;
+}
+.empty-icon svg{
+    font-size: 51px;
+    height: 17px;
 }
 
 .empty-state h3 {
@@ -1888,13 +1892,14 @@ td strong {
 /* ---------- Actions ---------- */
 .auth-section .empty-state {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.9rem;
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--line);
-  background: white;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+    /* margin-top: 2rem; */
+    /* padding-top: 2rem; */
+    border-top: 1px solid var(--line);
+    background: white;
+    padding: 0px 45px;
 }
  
 .auth-section .empty-icon {
@@ -1911,28 +1916,29 @@ td strong {
 .auth-section .empty-state h3 {
 display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 0.9rem;
     /* margin-top: 2rem; */
     border-top: 1px solid #f7f5f2;
     color: var(--muted);
+    font-size: 12px;
+    font-variant-caps: all-small-caps;
 }
  
 .auth-section .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  width: min(100%, 320px);
-  padding: 0.95rem 1.6rem;
-  border-radius: 999px;
-  border: 1.5px solid var(--ink);
-  font: 600 0.95rem/1 "Inter", system-ui, sans-serif;
-  letter-spacing: 0.03em;
-  text-decoration: none;
-  cursor: pointer;
-  transition: transform 0.2s ease, background-color 0.2s ease,
-    color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+ margin: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: min(100%, 320px);
+    padding: 0.95rem 1.6rem;
+    border-radius: 11px;
+    border: 1.5px solid var(--ink);
+    font: 600 0.95rem / 1 "Inter", system-ui, sans-serif;
+    letter-spacing: 0.03em;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
  
 .auth-section .btn-dark {
