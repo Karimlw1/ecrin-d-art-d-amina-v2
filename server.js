@@ -1405,8 +1405,9 @@ async function bootstrapAdmin() {
   try {
     await pool.query("SELECT 1");
     await bootstrapAdmin();
-    app.listen(PORT, "10.10.9.50", () => {
-  console.log(`Ecrin d'art d'amina fonctionne sur le port ${PORT}`);
+    app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Ecrin d'art d'amina fonctionne sur le port ${PORT}`);
+});
 });
   } catch (err) {
     console.error("Connexion à MySQL impossible. Vérifiez votre fichier .env et importez database/schema.sql.", err.message);
