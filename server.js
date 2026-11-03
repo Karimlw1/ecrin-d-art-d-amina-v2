@@ -19,6 +19,7 @@ const { sendEmail } = require("./utils/email");
 
 // Création de l'application Express et choix du port d'écoute (3000 par défaut).
 const app = express();
+app.set("trust proxy", 1);
 const PORT = Number(process.env.PORT || 3000);
 
 // Libellés français des valeurs enregistrées en base (statuts, moyens de paiement, événements).
@@ -99,6 +100,7 @@ app.use(session({
   store: sessionStore,
   resave: false,
   saveUninitialized: false,
+  proxy: true,
   cookie: {
     httpOnly: true,
     sameSite: "lax",
@@ -751,25 +753,76 @@ app.get("/login", (req, res) => res.render("auth/login", { title: "Connexion" })
 app.post("/login", async (req, res, next) => {
   try {
     const email = String(req.body.email || "").trim().toLowerCase();
-    const [rows] = await pool.query("SELECT * FROM users WHERE email=? AND is_active=1 LIMIT 1", [email]);
-    if (!rows.length || !(await bcrypt.compare(req.body.password || "", rows[0].password_hash))) {
+    const password = String(req.body.password || "");
+
+    console.log("[LOGIN] Attempt started");
+
+    const [rows] = await pool.query(
+      "SELECT * FROM users WHERE email = ? AND is_active = 1 LIMIT 1",
+      [email]
+    );
+
+    if (!rows.length) {
+      console.log("[LOGIN] Active user not found");
+
       req.flash("error", "L'e-mail ou le mot de passe est incorrect.");
       return res.redirect("/login");
     }
-    // Nouvelle session après la connexion (protège contre le vol de session) ; on y garde les infos du profil.
+
+    const passwordMatch = await bcrypt.compare(
+      password,
+      rows[0].password_hash
+    );
+
+    if (!passwordMatch) {
+      console.log("[LOGIN] Password does not match");
+
+      req.flash("error", "L'e-mail ou le mot de passe est incorrect.");
+      return res.redirect("/login");
+    }
+
+    console.log("[LOGIN] Password accepted");
+
     req.session.regenerate((err) => {
-      if (err) return next(err);
+      if (err) {
+        console.error("[LOGIN] Session regeneration failed:", err);
+        return next(err);
+      }
+
       req.session.user = {
-        id: rows[0].id, full_name: rows[0].full_name, email: rows[0].email,
-        phone: rows[0].phone, role: rows[0].role,
-        profile_image: rows[0].profile_image, theme: rows[0].theme,
-        language: rows[0].language, currency: rows[0].currency
+        id: rows[0].id,
+        full_name: rows[0].full_name,
+        email: rows[0].email,
+        phone: rows[0].phone,
+        role: rows[0].role,
+        profile_image: rows[0].profile_image,
+        theme: rows[0].theme,
+        language: rows[0].language,
+        currency: rows[0].currency
       };
+
       req.flash("success", `Bon retour, ${rows[0].full_name}.`);
-      res.redirect(rows[0].role === "admin" ? "/admin" : "/account");
+
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error("[LOGIN] Session save failed:", saveErr);
+          return next(saveErr);
+        }
+
+        console.log("[LOGIN] Session saved successfully");
+
+        res.redirect(
+          rows[0].role === "admin" ? "/admin" : "/account"
+        );
+      });
     });
-  } catch (err) { next(err); }
+
+  } catch (err) {
+    console.error("[LOGIN] Unexpected error:", err);
+    next(err);
+  }
 });
+
 // Déconnexion : détruit la session.
 app.post("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
