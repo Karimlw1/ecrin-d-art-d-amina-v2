@@ -1034,79 +1034,253 @@ app.get("/checkout", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 // Validation de la commande dans une transaction : contrôle des champs, verrouillage du stock, création de la commande, des lignes, du paiement et de l'historique.
-app.post("/checkout", async (req, res, next) => {
-  const conn = await pool.getConnection();
-  try {
-    const { customer_name, customer_email, customer_phone, shipping_country, shipping_city,
-      shipping_address, payment_method, customer_note, payer_phone } = req.body;
-    const allowed = ["airtel_money", "card", "cash_on_delivery"];
-    if (!customer_name || !customer_phone || !shipping_city || !shipping_address || !allowed.includes(payment_method)) {
-      req.flash("error", "Veuillez remplir tous les champs obligatoires de la commande.");
-      return res.redirect("/checkout");
-    }
-    if (payment_method === "airtel_money" && !/^\+243\d{9}$/.test(String(payer_phone || "").replace(/\s/g, ""))) {
-      req.flash("error", "Pour Airtel Money RDC, utilisez un numéro du type +2439XXXXXXXX.");
-      return res.redirect("/checkout");
-    }
-    const cart = await getCartDetails(req);
-    if (!cart.items.length) {
-      req.flash("error", "Votre panier est vide.");
-      return res.redirect("/shop");
-    }
-    await conn.beginTransaction();
-    // Verrouille les lignes de stock pour éviter la survente en cas de commandes simultanées.
-    for (const item of cart.items) {
-      const [stockRows] = await conn.query("SELECT stock_quantity FROM product_variants WHERE id=? FOR UPDATE", [item.variant_id]);
-      if (!stockRows.length || stockRows[0].stock_quantity < item.quantity) {
-        throw new Error(`Stock insuffisant pour ${item.name}. Veuillez mettre à jour votre panier.`);
+
+app.post(
+  "/checkout",
+  paymentUpload.single("payment_proof"),
+  async (req, res, next) => {
+    const conn = await pool.getConnection();
+    let transactionStarted = false;
+
+    try {
+      const {
+        customer_name,
+        customer_email,
+        customer_phone,
+        shipping_country,
+        shipping_city,
+        shipping_address,
+        payment_method,
+        customer_note,
+        payer_phone,
+        provider_reference
+      } = req.body;
+
+      // Modes de paiement autorisés.
+      const allowed = [
+        "airtel_money",
+        "orange_money",
+        "cash_on_delivery"
+      ];
+
+      // Vérification des informations obligatoires.
+      if (
+        !customer_name ||
+        !customer_phone ||
+        !shipping_city ||
+        !shipping_address ||
+        !allowed.includes(payment_method)
+      ) {
+        req.flash(
+          "error",
+          "Veuillez remplir tous les champs obligatoires de la commande."
+        );
+        return res.redirect("/checkout");
       }
-    }
-    const subtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const deliveryFee = 0; // L'administrateur pourra configurer les frais de livraison dans un futur écran de paramètres.
-    const total = subtotal + deliveryFee;
-    // Numéro de commande unique (préfixe + date + code aléatoire).
-    const orderNumber = `ASH-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString("hex").toUpperCase()}`;
-    const userId = req.session.user ? req.session.user.id : null;
-    // Statut initial du paiement selon le mode choisi (Airtel Money : en attente de confirmation).
-    const paymentStatus = payment_method === "cash_on_delivery" ? "pending" :
-      payment_method === "airtel_money" ? "awaiting_confirmation" : "pending";
-    const [orderResult] = await conn.query(
-      `INSERT INTO orders (order_number,user_id,customer_name,customer_email,customer_phone,
-       shipping_country,shipping_city,shipping_address,currency,subtotal,delivery_fee,total,
-       payment_method,payment_status,order_status,customer_note)
-       VALUES (?,?,?,?,?,?,?,?, 'USD',?,?,?,?,?, 'pending',?)`,
-      [orderNumber,userId,customer_name,customer_email || null,customer_phone,shipping_country || "RD Congo",
-       shipping_city,shipping_address,subtotal,deliveryFee,total,payment_method,paymentStatus,customer_note || null]
-    );
-    for (const item of cart.items) {
-      await conn.query(
-        `INSERT INTO order_items (order_id,variant_id,product_name,size,color_name,color_hex,unit_price,quantity,line_total)
-         VALUES (?,?,?,?,?,?,?,?,?)`,
-        [orderResult.insertId,item.variant_id,item.name,item.size,item.color_name,item.color_hex,item.price,item.quantity,item.price*item.quantity]
+
+      // Vérification du paiement Mobile Money.
+      const isMobileMoney =
+        payment_method === "airtel_money" ||
+        payment_method === "orange_money";
+
+      let cleanPhone = null;
+
+      if (isMobileMoney) {
+        cleanPhone = String(payer_phone || "").replace(/\s/g, "");
+
+        if (!/^\+243\d{9}$/.test(cleanPhone)) {
+          req.flash(
+            "error",
+            "Veuillez saisir un numéro valide au format +2439XXXXXXXX."
+          );
+          return res.redirect("/checkout");
+        }
+
+        if (!provider_reference || !req.file) {
+          req.flash(
+            "error",
+            "Veuillez fournir la référence et la capture du paiement."
+          );
+          return res.redirect("/checkout");
+        }
+      }
+
+      // Récupération du panier.
+      const cart = await getCartDetails(req);
+
+      if (!cart.items.length) {
+        req.flash("error", "Votre panier est vide.");
+        return res.redirect("/shop");
+      }
+
+      await conn.beginTransaction();
+      transactionStarted = true;
+
+      // Vérification et verrouillage du stock.
+      for (const item of cart.items) {
+        const [stockRows] = await conn.query(
+          "SELECT stock_quantity FROM product_variants WHERE id=? FOR UPDATE",
+          [item.variant_id]
+        );
+
+        if (
+          !stockRows.length ||
+          stockRows[0].stock_quantity < item.quantity
+        ) {
+          throw new Error(
+            `Stock insuffisant pour ${item.name}. Veuillez mettre à jour votre panier.`
+          );
+        }
+      }
+
+      // Calcul du montant.
+      const subtotal = cart.items.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
       );
-      await conn.query("UPDATE product_variants SET stock_quantity=stock_quantity-? WHERE id=?", [item.quantity,item.variant_id]);
+
+      const deliveryFee = 0;
+      const total = subtotal + deliveryFee;
+
+      // Création du numéro de commande.
+      const orderNumber =
+        `ASH-${Date.now().toString(36).toUpperCase()}-` +
+        crypto.randomBytes(2).toString("hex").toUpperCase();
+
+      const userId = req.session.user
+        ? req.session.user.id
+        : null;
+
+      // Statut initial du paiement.
+      const paymentStatus = isMobileMoney
+        ? "awaiting_confirmation"
+        : "pending";
+
+      // Enregistrement de la commande.
+      const [orderResult] = await conn.query(
+        `INSERT INTO orders (
+          order_number, user_id, customer_name, customer_email,
+          customer_phone, shipping_country, shipping_city,
+          shipping_address, currency, subtotal, delivery_fee,
+          total, payment_method, payment_status,
+          order_status, customer_note
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'USD', ?, ?, ?, ?, ?, 'pending', ?)`,
+        [
+          orderNumber,
+          userId,
+          customer_name,
+          customer_email || null,
+          customer_phone,
+          shipping_country || "RD Congo",
+          shipping_city,
+          shipping_address,
+          subtotal,
+          deliveryFee,
+          total,
+          payment_method,
+          paymentStatus,
+          customer_note || null
+        ]
+      );
+
+      // Enregistrement des produits et mise à jour du stock.
+      for (const item of cart.items) {
+        await conn.query(
+          `INSERT INTO order_items (
+            order_id, variant_id, product_name, size,
+            color_name, color_hex, unit_price, quantity, line_total
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            orderResult.insertId,
+            item.variant_id,
+            item.name,
+            item.size,
+            item.color_name,
+            item.color_hex,
+            item.price,
+            item.quantity,
+            item.price * item.quantity
+          ]
+        );
+
+        await conn.query(
+          `UPDATE product_variants
+           SET stock_quantity = stock_quantity - ?
+           WHERE id = ?`,
+          [item.quantity, item.variant_id]
+        );
+      }
+
+      // Identifiant Cloudinary de la capture.
+      const proofPath = isMobileMoney
+        ? req.file.filename
+        : null;
+
+      // Enregistrement du paiement et de ses informations.
+      await conn.query(
+        `INSERT INTO payments (
+          order_id, provider, amount, currency, status,
+          provider_reference, payer_phone, proof_path
+        )
+        VALUES (?, ?, ?, 'USD', ?, ?, ?, ?)`,
+        [
+          orderResult.insertId,
+          payment_method,
+          total,
+          paymentStatus,
+          isMobileMoney ? provider_reference.trim() : null,
+          cleanPhone,
+          proofPath
+        ]
+      );
+
+      // Historique de la commande.
+      await conn.query(
+        `INSERT INTO order_status_history (
+          order_id, old_status, new_status, changed_by, note
+        )
+        VALUES (?, NULL, 'pending', ?, 'Commande passée')`,
+        [orderResult.insertId, userId]
+      );
+
+      // Conversion du panier.
+      await conn.query(
+        "UPDATE carts SET status='converted' WHERE id=?",
+        [cart.cart.id]
+      );
+
+      await conn.commit();
+      transactionStarted = false;
+
+      track(req, "order_placed", null, { orderNumber });
+
+      res.render("order-success", {
+        title: "Commande reçue",
+        orderNumber,
+        paymentMethod: payment_method
+      });
+
+    } catch (err) {
+      if (transactionStarted) {
+        await conn.rollback();
+      }
+
+      console.error("Erreur checkout :", err);
+
+      req.flash(
+        "error",
+        err.message || "Impossible de passer votre commande."
+      );
+
+      res.redirect("/checkout");
+
+    } finally {
+      conn.release();
     }
-    await conn.query(
-      `INSERT INTO payments (order_id,provider,amount,currency,status,payer_phone)
-       VALUES (?,?,?,'USD',?,?)`,
-      [orderResult.insertId,payment_method,total,paymentStatus,payment_method === "airtel_money" ? payer_phone : null]
-    );
-    await conn.query(
-      "INSERT INTO order_status_history (order_id,old_status,new_status,changed_by,note) VALUES (?,NULL,'pending',?,'Commande passée')",
-      [orderResult.insertId,userId]
-    );
-    await conn.query("UPDATE carts SET status='converted' WHERE id=?", [cart.cart.id]);
-    await conn.commit();
-    track(req, "order_placed", null, { orderNumber });
-    res.render("order-success", { title: "Commande reçue", orderNumber, paymentMethod: payment_method });
-  } catch (err) {
-    await conn.rollback();
-    req.flash("error", err.message || "Impossible de passer votre commande.");
-    res.redirect("/checkout");
-  } finally {
-    conn.release();
   }
-});
+);
 
 // Ajoute ou met à jour un avis ; il reste « en attente » jusqu'à sa modération.
 app.post("/product/:id/review", requireLogin, async (req, res, next) => {

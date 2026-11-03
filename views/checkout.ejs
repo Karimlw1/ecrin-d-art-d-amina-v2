@@ -535,19 +535,22 @@
 
     // Afficher le bon numéro du bénéficiaire.
 
-    if (method === "airtel_money") {
+  if (
+  payment_method === "airtel_money" ||
+  payment_method === "orange_money"
+) {
+  const cleanPhone = String(payer_phone || "").replace(/\s/g, "");
 
-      recipientNumber.textContent = "0976203805";
-      recipientProvider.textContent = "Airtel Money";
-
-    } else if (method === "orange_money") {
-
-      recipientNumber.textContent = "0853958848";
-      recipientProvider.textContent = "Orange Money";
-
-    }
-
+  if (!/^\+243\d{9}$/.test(cleanPhone)) {
+    req.flash("error", "Veuillez saisir un numéro valide au format +2439XXXXXXXX.");
+    return res.redirect("/checkout");
   }
+
+  if (!provider_reference || !req.file) {
+    req.flash("error", "Veuillez fournir la référence et la capture du paiement.");
+    return res.redirect("/checkout");
+  }
+}
 
 
   // Écouter le changement du mode de paiement.
