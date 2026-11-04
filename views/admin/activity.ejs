@@ -3,6 +3,7 @@
 <%# Haut de la mise en page admin ; surligne « Activité des clients » dans le menu. %>
 <%- include("partials-top", {title, active:"activity"}) %>
 <div class="admin-panel">
+
   <div class="panel-heading">
     <div>
       <span class="eyebrow">STATISTIQUES DE LA BOUTIQUE</span>
@@ -10,7 +11,21 @@
       <%# Confidentialité : les invités sont suivis par un identifiant de session pseudonymisé ; les adresses IP brutes ne sont pas conservées. %>
       <p class="muted">Des identifiants de session pseudonymisés sont utilisés pour le suivi des invités ; les adresses IP brutes ne sont pas conservées.</p>
     </div>
+    <form
+  action="/admin/activity/clear"
+  method="POST"
+  onsubmit="return confirm('Voulez-vous vraiment effacer tout le journal d’activité ? Cette action est irréversible.');"
+>
+  <button
+    type="submit"
+    class="btn btn-dark btn-small"
+    <%= activity.length === 0 ? "disabled" : "" %>
+  >
+    Effacer les activités
+  </button>
+</form>
   </div>
+
   <div class="table-wrap">
     <table>
       <%# En-têtes du tableau. %>

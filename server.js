@@ -21,6 +21,9 @@ const crypto = require("crypto");
 const fs = require("fs");
 
 const { sendEmail } = require("./utils/email");
+const {
+  startCartReminderJob
+} = require("./utils/cart-reminders");
 const { v2: cloudinary } = require("cloudinary");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
@@ -53,6 +56,7 @@ const pool = mysql.createPool({
   queueLimit: 0,
   decimalNumbers: true
 });
+
 
 // =====================================================
 // 3. LABELS
@@ -1254,6 +1258,11 @@ app.post("/cart/add", async (req, res, next) => {
       [cart.id, variantId, quantity, variant.stock_quantity]
     );
 
+    await pool.query(
+  "UPDATE carts SET last_activity = NOW() WHERE id = ?",
+  [cart.id]
+);
+
     track(req, "add_to_cart", variant.product_id, {
       variantId,
       quantity
@@ -1288,6 +1297,10 @@ app.post("/cart/update", async (req, res, next) => {
         [Math.min(20, quantity), itemId, cart.id]
       );
     }
+    await pool.query(
+  "UPDATE carts SET last_activity = NOW() WHERE id = ?",
+  [cart.id]
+);
 
     res.redirect("/cart");
   } catch (err) {
@@ -1303,6 +1316,11 @@ app.post("/cart/remove", async (req, res, next) => {
       "DELETE FROM cart_items WHERE id = ? AND cart_id = ?",
       [Number(req.body.cart_item_id), cart.id]
     );
+
+    await pool.query(
+  "UPDATE carts SET last_activity = NOW() WHERE id = ?",
+  [cart.id]
+);
 
     track(req, "remove_from_cart");
     res.redirect("/cart");
@@ -2259,8 +2277,13 @@ app.get("/admin/carts", requireAdmin, async (req, res, next) => {
          c.*,
          COALESCE(u.full_name, 'Visiteur invité') AS full_name,
          COALESCE(u.email, 'Invité') AS email,
-         COUNT(ci.id) AS item_count,
-         COALESCE(SUM(ci.quantity * v.price), 0) AS cart_value,
+
+         COUNT(DISTINCT ci.id) AS item_count,
+
+         COALESCE(
+           SUM(ci.quantity * v.price),
+           0
+         ) AS cart_value,
 
          GROUP_CONCAT(
            CONCAT(
@@ -2273,15 +2296,20 @@ app.get("/admin/carts", requireAdmin, async (req, res, next) => {
          ) AS items
 
        FROM carts c
+
        LEFT JOIN users u ON u.id = c.user_id
        LEFT JOIN cart_items ci ON ci.cart_id = c.id
        LEFT JOIN product_variants v ON v.id = ci.variant_id
        LEFT JOIN products p ON p.id = v.product_id
 
        WHERE c.status IN ('active', 'abandoned')
+
        GROUP BY c.id
-       HAVING COUNT(ci.id) > 0
+
+       HAVING COALESCE(SUM(ci.quantity), 0) > 0
+
        ORDER BY c.last_activity DESC
+
        LIMIT 250`
     );
 
@@ -2289,6 +2317,7 @@ app.get("/admin/carts", requireAdmin, async (req, res, next) => {
       title: "Suivi des paniers",
       carts
     });
+
   } catch (err) {
     next(err);
   }
@@ -2363,6 +2392,20 @@ app.get("/admin/activity", requireAdmin, async (req, res, next) => {
     next(err);
   }
 });
+
+app.post("/admin/activity/clear", requireAdmin, async (req, res, next) => {
+  try {
+    await pool.query("DELETE FROM client_activity");
+
+    req.flash("success", "Le journal d'activité a été effacé.");
+
+    res.redirect("/admin/activity");
+
+  } catch (err) {
+    next(err);
+  }
+});
+
 
 // =====================================================
 // 36. ORDER TRACKING
@@ -2555,6 +2598,12 @@ async function bootstrapAdmin() {
     console.log("TiDB database connected successfully!");
 
     await bootstrapAdmin();
+
+    // Start automatic abandoned-cart reminders.
+    startCartReminderJob({
+      pool,
+      sendEmail
+    });
 
     app.listen(PORT, "0.0.0.0", () => {
       console.log(
