@@ -2102,6 +2102,7 @@ app.post("/admin/orders/:id/status", requireAdmin, async (req, res, next) => {
 // 31. ADMIN PAYMENTS
 // =====================================================
 
+
 app.get("/admin/payments", requireAdmin, async (req, res, next) => {
   try {
     const [payments] = await pool.query(
@@ -2117,14 +2118,28 @@ app.get("/admin/payments", requireAdmin, async (req, res, next) => {
        LIMIT 250`
     );
 
+    // Générer les liens des captures Cloudinary.
+    for (const payment of payments) {
+      if (payment.proof_path) {
+        payment.proof_url = cloudinary.url(payment.proof_path, {
+          secure: true,
+          sign_url: true,
+          type: "authenticated",
+          resource_type: "image"
+        });
+      }
+    }
+
     res.render("admin/payments", {
       title: "Suivi des paiements",
       payments
     });
+
   } catch (err) {
     next(err);
   }
 });
+
 
 app.post("/admin/payments/:id/status", requireAdmin, async (req, res, next) => {
   let conn;

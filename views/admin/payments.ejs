@@ -1,77 +1,149 @@
+
 <%# admin/payments.ejs - Suivi et vérification des paiements. %>
 <%# Reçoit : title, payments[]. Chaque paiement peut contenir proof_url. %>
 
-<%- include("partials-top", {title, active:"payments"}) %>
+<%- include("partials-top", { title, active: "payments" }) %>
 
+
+<%# AVERTISSEMENT DE SÉCURITÉ %>
 <div class="notice-box">
-  <strong>Sécurité des paiements :</strong>
-  vérifiez chaque transaction auprès du prestataire officiel
-  avant de marquer une commande comme payée.
-  Le téléchargement d'une capture ne confirme pas automatiquement
-  un paiement.
+  <strong>Sécurité des paiements</strong>
+
+  <p>
+    Vérifiez chaque transaction auprès du prestataire officiel
+    avant de marquer une commande comme payée.
+    Une capture d'écran ne constitue pas une confirmation de paiement.
+  </p>
 </div>
 
+
+<%# CONTENU PRINCIPAL %>
 <div class="admin-panel">
 
   <div class="panel-heading">
+
     <div>
       <span class="eyebrow">MOUVEMENTS D'ARGENT</span>
-      <h2>Enregistrements de paiements</h2>
+      <h2>Suivi des paiements</h2>
+
+      <p class="muted small">
+        Consultez les preuves et gérez les confirmations de paiement.
+      </p>
     </div>
+
+    <span class="muted small">
+      <%= payments.length %> paiement(s)
+    </span>
+
   </div>
 
+
+  <%# TABLEAU DES PAIEMENTS %>
   <div class="table-wrap">
+
     <table>
 
       <thead>
         <tr>
           <th>Commande / client</th>
-          <th>Moyen et montant</th>
-          <th>Payeur</th>
-          <th>Preuve de paiement</th>
+          <th>Paiement</th>
+          <th>Coordonnées du payeur</th>
+          <th>Preuve</th>
           <th>Statut</th>
-          <th>Mise à jour (admin)</th>
+          <th>Gestion</th>
         </tr>
       </thead>
+
 
       <tbody>
 
         <% if (!payments.length) { %>
+
           <tr>
             <td colspan="6" class="muted">
               Aucun paiement enregistré pour le moment.
             </td>
           </tr>
+
         <% } %>
+
 
         <% payments.forEach(p => { %>
 
           <tr>
 
+            <%# COMMANDE ET CLIENT %>
             <td>
-              <strong><%= p.order_number %></strong>
+
+              <strong>
+                <%= p.order_number %>
+              </strong>
+
               <br>
-              <%= p.customer_name %>
+
+              <span>
+                <%= p.customer_name %>
+              </span>
+
               <br>
-              <small>
+
+              <small class="muted">
                 <%= new Date(p.created_at).toLocaleString("fr-FR") %>
               </small>
+
             </td>
 
+
+            <%# MOYEN ET MONTANT %>
             <td>
-              <%= label(p.provider) %>
-              <br>
+
               <strong>
-                $<%= Number(p.amount).toFixed(2) %>
-                <%= p.currency %>
+                <%= label(p.provider) %>
               </strong>
+
+              <br>
+
+              <span>
+                <%= Number(p.amount).toFixed(2) %>
+                <%= p.currency %>
+              </span>
+
             </td>
 
+
+            <%# INFORMATIONS DU PAYEUR %>
             <td>
-              <%= p.payer_phone || p.customer_phone || "Non renseigné" %>
+
+              <strong>
+                <%= p.payer_phone || "Non renseigné" %>
+              </strong>
+
+              <% if (p.customer_phone) { %>
+
+                <br>
+
+                <small class="muted">
+                  Client : <%= p.customer_phone %>
+                </small>
+
+              <% } %>
+
+              <% if (p.provider_reference) { %>
+
+                <br>
+
+                <small class="muted">
+                  Réf. : <%= p.provider_reference %>
+                </small>
+
+              <% } %>
+
             </td>
 
+
+            <%# PREUVE DE PAIEMENT %>
             <td>
+
               <% if (p.proof_url) { %>
 
                 <a
@@ -80,37 +152,52 @@
                   rel="noopener noreferrer"
                   class="btn btn-dark btn-small"
                 >
-                  Voir la capture
+                  <span>↗</span> Voir la capture
                 </a>
 
               <% } else { %>
 
-                <span class="muted">Aucune capture</span>
+                <span class="muted">
+                  Aucune capture
+                </span>
 
               <% } %>
 
-              <% if (p.provider_reference) { %>
-                <br>
-                <small>
-                  Réf. : <%= p.provider_reference %>
-                </small>
-              <% } %>
             </td>
 
+
+            <%# STATUT DU PAIEMENT %>
             <td>
+
               <span class="status-pill status-<%= p.status %>">
                 <%= label(p.status) %>
               </span>
+
             </td>
 
+
+            <%# ACTIONS ADMINISTRATEUR %>
             <td>
+
               <form
                 action="/admin/payments/<%= p.id %>/status"
-                method="post"
+                method="POST"
                 class="payment-admin-form"
               >
 
-                <select name="status">
+                <label
+                  for="payment-status-<%= p.id %>"
+                  class="muted small"
+                >
+                  Statut du paiement
+                </label>
+
+                <select
+                  name="status"
+                  id="payment-status-<%= p.id %>"
+                  required
+                >
+
                   <% [
                     "pending",
                     "awaiting_confirmation",
@@ -127,25 +214,53 @@
                     </option>
 
                   <% }) %>
+
                 </select>
 
+
+                <label
+                  for="payment-reference-<%= p.id %>"
+                  class="muted small"
+                >
+                  Référence de transaction
+                </label>
+
                 <input
+                  type="text"
+                  id="payment-reference-<%= p.id %>"
                   name="provider_reference"
                   value="<%= p.provider_reference || '' %>"
                   placeholder="Référence de transaction"
+                  maxlength="190"
                 >
+
+
+                <label
+                  for="payment-note-<%= p.id %>"
+                  class="muted small"
+                >
+                  Note administrative
+                </label>
 
                 <input
+                  type="text"
+                  id="payment-note-<%= p.id %>"
                   name="admin_note"
                   value="<%= p.admin_note || '' %>"
-                  placeholder="Note de l'administrateur"
+                  placeholder="Ex. : Transaction vérifiée"
+                  maxlength="500"
                 >
 
-                <button class="btn btn-dark btn-small">
-                  Mettre à jour
+
+                <button
+                  type="submit"
+                  class="btn btn-dark btn-small"
+                >
+                  Enregistrer
                 </button>
 
               </form>
+
             </td>
 
           </tr>
@@ -153,9 +268,12 @@
         <% }) %>
 
       </tbody>
+
     </table>
+
   </div>
 
 </div>
+
 
 <%- include("partials-bottom") %>
