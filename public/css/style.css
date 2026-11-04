@@ -310,8 +310,8 @@ main {
     justify-content: center;
     align-items: center;
     gap: 24px;
-    border: 1px solid var(--ink);
-    background: #179f15;
+    border: none;
+    background: #4cc54a;
     color: #fff;
     padding: 14px 20px;
     font-size: 9px;
@@ -755,6 +755,9 @@ main {
     text-align: center;
     padding: 0px 20px 55px;
     background: rgb(17 17 17);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .page-hero img{
   width: 263px;
@@ -1231,7 +1234,7 @@ input:focus,select:focus,textarea:focus {
     accent-color:var(--ink)
 }
 
-.payment-icon {
+.payment-icon-airtel,.payment-icon-orange,.payment-icon-cash  {
     width:38px;
     height:38px;
     display:grid;
@@ -1250,7 +1253,24 @@ input:focus,select:focus,textarea:focus {
     font-size:10px;
     color:var(--muted)
 }
-
+.payment-icon-airtel{
+    background: url(../uploads/airtelIMG.jpg);
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+.payment-icon-orange{
+    background: url(../uploads/orangeIMG.webp);
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+.payment-icon-cash{
+    background: url(../uploads/onDeliveryIMG.webp);
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
 .hidden {
     display:none!important
 }
@@ -1985,8 +2005,8 @@ display: flex;
 }
  
 .auth-section .btn-dark:hover {
-  background: var(--gold-deep);
-  border-color: var(--gold-deep);
+  background: #1f7b27;
+  border-color: white;
   transform: translateY(-2px);
   box-shadow: 0 10px 22px rgba(150, 116, 58, 0.3);
 }
